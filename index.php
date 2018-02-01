@@ -81,12 +81,12 @@
 
 
     $list = $sql->getOne("SELECT id
-                          FROM EmailList
+                          FROM mailchimp_emaillist
                           WHERE mailchimp_list_id = '".$listID."'
                         ");
 
     if($list==''){
-      $query = $sql->insert("EmailList",array(
+      $query = $sql->insert("mailchimp_emaillist",array(
         'list_name' => $contact_type,
         'mailchimp_list_id' => $listID,
         'total_user_count' => $count,
@@ -97,7 +97,7 @@
       ));
     }
     else{
-      $query = $sql->update("EmailList",array(
+      $query = $sql->update("mailchimp_emaillist",array(
         'total_user_count' => $count,
         'last_update_at' => date('Y-m-d H:i:s'),
         'status' => 1,
