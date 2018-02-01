@@ -2,6 +2,9 @@
 
 <?php
 
+  date_default_timezone_set('Asia/Kolkata');
+
+
   require("../common.php");
   require("credentials.php");
 
@@ -20,68 +23,86 @@
 
   if($contact_type=='volunteer'){
     $users = getUsers($sql);
-    // clearList($volunteer,$apiKey);
-    populateList($volunteer,$users,$apiKey);
+    clearList($volunteer,$apiKey);
+    populateList($volunteer,$users,$apiKey,$sql,$contact_type);
   }
   elseif($contact_type=='donor'){
     $donorsql = new Sql($config_data['db_host'], $config_data['db_user'], $config_data['db_password'], 'makeadiff_cfrapp');
     $users = getUsers($donorsql,'donor');
-    populateList($donor,$users,$apiKey);
+    populateList($donor,$users,$apiKey,$sql,$contact_type);
   }
   elseif($contact_type=='alumni'){
     $users = getUsers($sql,'alumni');
-    populateList($alumni,$users,$apiKey);
+    populateList($alumni,$users,$apiKey,$sql,$contact_type);
   }
 
   // dump($users);
 
   $total = count($users);
 
-  function populateList($listID,$users,$apiKey){
+  function populateList($listID,$users,$apiKey,$sql,$contact_type){ //parameter 1. List_id, 2. array of members, 3. apiKey, 4.sql Object for makeadiff_madapp, 5. Contact Type
     $success = 0;
-    // foreach ($users as $user) {
-    //
-    //   $json = json_encode($user);
-    //
-    //   $dataCenter = substr($apiKey,strpos($apiKey,'-')+1);
-    //   $url = 'https://' . $dataCenter . '.api.mailchimp.com/3.0/lists/' . $listID . '/members';
-    //
-    //   $ch = curl_init($url);
-    //   curl_setopt($ch, CURLOPT_USERPWD, 'user:' . $apiKey);
-    //   curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
-    //   curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    //   curl_setopt($ch, CURLOPT_TIMEOUT, 20);
-    //   curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
-    //   curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-    //   curl_setopt($ch, CURLOPT_POSTFIELDS, $json);
-    //   $result = curl_exec($ch);
-    //   $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    //   curl_close($ch);
-    //
-    //   if ($httpCode == 200) {
-    //     $success++;
-    //     echo $user['email_address'].' added';
-    //   } else {
-    //       switch ($httpCode) {
-    //           case 214:
-    //               break;
-    //           default:
-    //               echo $user['email_address'].' not added';
-    //               break;
-    //       }
-    //
-    //   }
-    // }
+    foreach ($users as $user) {
+
+      $json = json_encode($user);
+
+      $dataCenter = substr($apiKey,strpos($apiKey,'-')+1);
+      $url = 'https://' . $dataCenter . '.api.mailchimp.com/3.0/lists/' . $listID . '/members';
+
+      $ch = curl_init($url);
+      curl_setopt($ch, CURLOPT_USERPWD, 'user:' . $apiKey);
+      curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+      curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+      curl_setopt($ch, CURLOPT_TIMEOUT, 20);
+      curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
+      curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+      curl_setopt($ch, CURLOPT_POSTFIELDS, $json);
+      $result = curl_exec($ch);
+      $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+      curl_close($ch);
+
+      if ($httpCode == 200) {
+        $success++;
+        echo $user['email_address'].' added';
+      } else {
+          switch ($httpCode) {
+              case 214:
+                  break;
+              default:
+                  echo $user['email_address'].' not added';
+                  break;
+          }
+
+      }
+    }
     echo $success.' Uses have been added to '.$listID;
 
     $count = count_members_in_list($listID,$apiKey);
 
-    dump($count);
 
     $list = $sql->getOne("SELECT id
                           FROM EmailList
-                          WHERE list_id = ".$listID."
+                          WHERE mailchimp_list_id = '".$listID."'
                         ");
+
+    if($list==''){
+      $query = $sql->insert("EmailList",array(
+        'list_name' => $contact_type,
+        'mailchimp_list_id' => $listID,
+        'total_user_count' => $count,
+        'last_update_at' => date('Y-m-d H:i:s'),
+        'created_at' => date('Y-m-d H:i:s'),
+        'user_id' => '57184',
+        'status' => 1,
+      ));
+    }
+    else{
+      $query = $sql->update("EmailList",array(
+        'total_user_count' => $count,
+        'last_update_at' => date('Y-m-d H:i:s'),
+        'status' => 1,
+      ),'id='.$list);
+    }
 
   }
 
@@ -229,7 +250,6 @@
     $result = json_decode($result);
 
     $count = $result->total_items;
-    dump($result);
     return $count;
   }
 
