@@ -20,7 +20,7 @@
 
   if($contact_type=='volunteer'){
     $users = getUsers($sql);
-    clearList($volunteer,$apiKey);
+    // clearList($volunteer,$apiKey);
     populateList($volunteer,$users,$apiKey);
   }
   elseif($contact_type=='donor'){
@@ -39,39 +39,50 @@
 
   function populateList($listID,$users,$apiKey){
     $success = 0;
-    foreach ($users as $user) {
-
-      $json = json_encode($user);
-
-      $memberID = md5(strtolower($user['email_address']));
-      $dataCenter = substr($apiKey,strpos($apiKey,'-')+1);
-      $url = 'https://' . $dataCenter . '.api.mailchimp.com/3.0/lists/' . $listID . '/members';
-
-      $ch = curl_init($url);
-      curl_setopt($ch, CURLOPT_USERPWD, 'user:' . $apiKey);
-      curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
-      curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-      curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-      curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
-      curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-      curl_setopt($ch, CURLOPT_POSTFIELDS, $json);
-      $result = curl_exec($ch);
-      $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-      curl_close($ch);
-
-      if ($httpCode == 200) {
-        $success++;
-      } else {
-          switch ($httpCode) {
-              case 214:
-                  break;
-              default:
-                  break;
-          }
-
-      }
-    }
+    // foreach ($users as $user) {
+    //
+    //   $json = json_encode($user);
+    //
+    //   $dataCenter = substr($apiKey,strpos($apiKey,'-')+1);
+    //   $url = 'https://' . $dataCenter . '.api.mailchimp.com/3.0/lists/' . $listID . '/members';
+    //
+    //   $ch = curl_init($url);
+    //   curl_setopt($ch, CURLOPT_USERPWD, 'user:' . $apiKey);
+    //   curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+    //   curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    //   curl_setopt($ch, CURLOPT_TIMEOUT, 20);
+    //   curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
+    //   curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+    //   curl_setopt($ch, CURLOPT_POSTFIELDS, $json);
+    //   $result = curl_exec($ch);
+    //   $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    //   curl_close($ch);
+    //
+    //   if ($httpCode == 200) {
+    //     $success++;
+    //     echo $user['email_address'].' added';
+    //   } else {
+    //       switch ($httpCode) {
+    //           case 214:
+    //               break;
+    //           default:
+    //               echo $user['email_address'].' not added';
+    //               break;
+    //       }
+    //
+    //   }
+    // }
     echo $success.' Uses have been added to '.$listID;
+
+    $count = count_members_in_list($listID,$apiKey);
+
+    dump($count);
+
+    $list = $sql->getOne("SELECT id
+                          FROM EmailList
+                          WHERE list_id = ".$listID."
+                        ");
+
   }
 
   function getUsers($sql,$contact_type='',$city_id='',$vertical_id='') {
@@ -117,13 +128,16 @@
         return $users_ordered;
       }
       else{
+
+        $this_year = get_year();
+
         $users =  $sql->getAll("SELECT
                                   User.name as name, email, mad_email,C.name as City, GROUP_CONCAT(G.name) as roles, GROUP_CONCAT(DISTINCT G.type) as type
                                 FROM User
                                 INNER JOIN City C on C.id=User.city_id
                                 INNER JOIN UserGroup UG on UG.user_id = User.id
                                 INNER JOIN `Group` G on G.id = UG.group_id
-                                WHERE user_type = 'volunteer' AND User.status = 1
+                                WHERE user_type = 'volunteer' AND User.status = 1 AND UG.year = ".$this_year."
                                 GROUP BY User.id
                                 ORDER BY User.name
                                  ");
@@ -149,21 +163,7 @@
     $dataCenter = substr($apiKey,strpos($apiKey,'-')+1);
     $url = 'https://' . $dataCenter . '.api.mailchimp.com/3.0/lists/'.$listID.'/members';
 
-    $ch = curl_init($url.'?field=total_items');
-    curl_setopt($ch, CURLOPT_USERPWD, 'user:' . $apiKey);
-    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-    curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
-    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-
-    $result = curl_exec($ch);
-    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    curl_close($ch);
-    $result = json_decode($result);
-
-    $count = $result->total_items;
-    // echo $count;
+    $count = count_members_in_list($listID,$apiKey);
 
     $offset = 0;
     $getcount = 100;
@@ -205,11 +205,32 @@
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
       }
-
       $count -= $getcount;
-
     }
 
+  }
+
+  function count_members_in_list($listID,$apiKey){
+
+    $dataCenter = substr($apiKey,strpos($apiKey,'-')+1);
+    $url = 'https://' . $dataCenter . '.api.mailchimp.com/3.0/lists/'.$listID.'/members';
+
+    $ch = curl_init($url.'?field=total_items');
+    curl_setopt($ch, CURLOPT_USERPWD, 'user:' . $apiKey);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 20);
+    curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+
+    $result = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+    $result = json_decode($result);
+
+    $count = $result->total_items;
+    dump($result);
+    return $count;
   }
 
   function get_year() { /* Function get_year(): Source: madapp/system/helper/misc_helper.php Line 123 */
