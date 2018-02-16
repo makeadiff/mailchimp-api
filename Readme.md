@@ -15,6 +15,15 @@ The structure of the call could be.
 * iFrame
 * php-curl-class
 
+create a file called curl.php in the parent directory which included the curl-class folder
+
+Example
+```sh
+<?php
+require 'php-curl-class/vendor/autoload.php';
+ ?>
+```
+
 ## Upcoming Features
 
 * List - Create Tools.
