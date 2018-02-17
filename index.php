@@ -41,9 +41,12 @@
   }
 
 
+  createtables($sql);
+
+
   if($contact_type=='volunteer'){
-    $users = getUsers($sql);
-    // clearList($volunteer,$apiKey);
+    $new = clearList($sql,$volunteer,$apiKey);
+    $users = getUsers($sql,$contact_type,$new);
     populateList($volunteer,$users,$apiKey,$sql,$contact_type);
   }
   elseif($contact_type=='donor'){
@@ -68,7 +71,7 @@
   elseif ($contact_type=='list_status') {
     //
   }
-
+  dump($users);
   $total = count($users);
 
   function populateList($listID,$users,$apiKey,$sql){ //parameter 1. List_id, 2. array of members, 3. apiKey, 4.sql Object for makeadiff_madapp, 5. Contact Type
@@ -112,7 +115,7 @@
 
   }
 
-  function getUsers($sql,$contact_type='',$city_id='',$vertical_id='') {
+  function getUsers($sql,$contact_type='',$condition=array()) {
 
       if($contact_type=='donor'){
 
@@ -208,13 +211,20 @@
 
         $this_year = get_year();
 
+        if(!empty($condition)){
+          $where = "AND User.id IN (".implode($condition).")";
+        }
+        else{
+          $where = "";
+        }
+
         $users =  $sql->getAll("SELECT
-                                  User.name as name, email, mad_email,C.name as City, GROUP_CONCAT(G.name) as roles, GROUP_CONCAT(DISTINCT G.type) as type
+                                  User.id as id,User.name as name, email, mad_email,C.name as City, GROUP_CONCAT(G.name) as roles, GROUP_CONCAT(DISTINCT G.type) as type
                                 FROM User
                                 INNER JOIN City C on C.id=User.city_id
                                 INNER JOIN UserGroup UG on UG.user_id = User.id
                                 INNER JOIN `Group` G on G.id = UG.group_id
-                                WHERE user_type = 'volunteer' AND User.status = 1 AND UG.year = ".$this_year."
+                                WHERE user_type = 'volunteer' AND User.status = 1 AND UG.year = ".$this_year." ".$where."
                                 GROUP BY User.id
                                 ORDER BY User.name
                                  ");
@@ -235,34 +245,48 @@
       }
   }
 
-  function clearList($listID,$apiKey){
+  function clearList($sql,$listID,$apiKey){
 
     $dataCenter = substr($apiKey,strpos($apiKey,'-')+1);
     $url = 'https://' . $dataCenter . '.api.mailchimp.com/3.0/lists/'.$listID.'/members';
 
-    $count = count_members_in_list($listID,$apiKey);
+    $current_volunteers = $sql->getAll('SELECT user_id as id FROM mailchimp_volunteers ORDER BY user_id');
 
-    $offset = 0;
-    $getcount = 100;
-
-    while ($count > 0){
-
-      $get_url = $url.'?offset='.$offset.'&count='.$getcount;
-
-      $result = curl_get_data($apiKey,$get_url);
-      $users = $result->members;
-      $delete_array=array();
-      foreach ($users as $user) {
-        $email = $user->email_address;
-        $memberID = md5(strtolower($email));
-        $delete_array[]=$memberID;
-        $delete_url = $url.'/'.$memberID;
-        // $result = curl_delete_data($apiKey,$delete_url);
-      }
-      // curl_delete($apiKey,$url,$delete_array);
-      $count -= $getcount;
+    $curr_vol = array();
+    foreach ($current_volunteers as $vol) {
+      $curr_vol[] = $vol['id'];
     }
 
+    $volunteers = $sql->getAll('SELECT id FROM User WHERE status=1 AND user_type="volunteer" ORDER BY id');
+
+    $all_vol = array();
+    foreach ($volunteers as $vol) {
+      $all_vol[] = $vol['id'];
+    }
+
+    $delete_array = array_diff($curr_vol,$all_vol);
+    $delete_users = $sql->getAll('SELECT email,mad_email FROM User WHERE id IN ('.implode(',',$delete_array).')');
+    $delete = $sql->execQuery('DELETE FROM mailchimp_volunteers WHERE user_id IN ('.implode(',',$delete_array).')');
+    $i=0;
+    $batchoperations = array();
+    foreach ($delete_users as $element) {
+      if($element['mad_email']!=''){
+        $email = $element['email'];
+      }
+      else{
+        $email = $element['mad_email'];
+      }
+      $memberID = md5(strtolower($email));
+      $batchoperations['operations'][$i]['method']='DELETE';
+      $batchoperations['operations'][$i]['path']='lists/' . $listID . '/members/'.$memberID;
+      $i++;
+    }
+
+    $url = 'https://' . $dataCenter . '.api.mailchimp.com/3.0/batches';
+    $batch_delete = curl_post_data($apiKey,$url,$batchoperations);
+    $new_users = array_diff($all_vol,$curr_vol);
+
+    return $new_users;
   }
 
   function count_members_in_list($listID,$apiKey){ //Function to get the number of members in the list identified by the List ID
@@ -330,6 +354,40 @@
       }
       return $mixed;
   }
+
+  function createtables($sql){
+
+                    // MailChimp Active Volunteer List
+    $mc_vol = $sql->execQuery('CREATE TABLE IF NOT EXISTS `mailchimp_volunteers` (
+                    	`id` INT (11)  unsigned NOT NULL auto_increment,
+                    	`user_id` INT (11)  unsigned NOT NULL,
+                    	PRIMARY KEY (`id`),
+                    	KEY (`user_id`)
+                    ) DEFAULT CHARSET=utf8');
+
+
+                    // Mailchimp Email List
+    $mc_el = $sql->execQuery("CREATE TABLE IF NOT EXISTS `mailchimp_emaillist` (
+                    	`id` INT (11)  unsigned NOT NULL auto_increment,
+                    	`list_name` VARCHAR (100)   NOT NULL,
+                    	`mailchimp_list_id` INT (11)  unsigned NOT NULL,
+                    	`total_user_count` VARCHAR (100)   NOT NULL,
+                    	`last_udated_at` DATETIME    NOT NULL,
+                    	`created_at` DATETIME    NOT NULL,
+                    	`user_id` INT (11)  unsigned NOT NULL,
+                    	`status` ENUM ('0','1') DEFAULT '1',
+                    	PRIMARY KEY (`id`),
+                    	KEY (`mailchimp_list_id`),
+                    	KEY (`user_id`)
+                    ) DEFAULT CHARSET=utf8");
+
+    // $volunteers = $sql->getAll('SELECT id as user_id FROM User WHERE status=1 AND user_type="volunteer"');
+    //
+    // foreach ($volunteers as $volunteer) {
+    //   $insert = $sql->insert('mailchimp_volunteers',$volunteer);
+    // }
+  }
+
 
 
  ?>
