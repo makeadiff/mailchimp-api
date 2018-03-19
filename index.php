@@ -104,11 +104,11 @@
       break;
     case 'tra_participation_data':
       $users = getUsers($sql,$contact_type);
-      // patch($volunteer,$users,$apiKey,$sql);
+      patch($volunteer,$users,$apiKey,$sql);
       break;
     case 'user_credits':
       $users = getUsers($sql,$contact_type);
-      // patch($volunteer,$users,$apiKey,$sql);
+      patch($volunteer,$users,$apiKey,$sql);
       break;
     default:
       $new = clearList($sql,$volunteer,$apiKey);
