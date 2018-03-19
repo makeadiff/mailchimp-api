@@ -112,23 +112,23 @@
       break;
     case 'user_sheltersensitisation':
       $users = getUsers($sql,$contact_type);
-      // patch($volunteer,$users,$apiKey,$sql);
+      patch($volunteer,$users,$apiKey,$sql);
       break;
     case 'user_fr_training':
       $users = getUsers($sql,$contact_type);
-      // patch($volunteer,$users,$apiKey,$sql);
+      patch($volunteer,$users,$apiKey,$sql);
       break;
     case 'user_ed_training':
       $users = getUsers($sql,$contact_type);
-      // patch($volunteer,$users,$apiKey,$sql);
+      patch($volunteer,$users,$apiKey,$sql);
       break;
     case 'user_tra_training':
       $users = getUsers($sql,$contact_type);
-      // patch($volunteer,$users,$apiKey,$sql);
+      patch($volunteer,$users,$apiKey,$sql);
       break;
     case 'user_city_circle':
       $users = getUsers($sql,$contact_type);
-      // patch($volunteer,$users,$apiKey,$sql);
+      patch($volunteer,$users,$apiKey,$sql);
       break;
     default:
       $new = clearList($sql,$volunteer,$apiKey);
