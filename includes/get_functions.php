@@ -402,6 +402,148 @@ function getUsers($sql,$contact_type='',$condition=array()) {
       }
       return $users_ordered;
     }
+    else if($contact_type=='user_sheltersensitisation'){ //Volunteer with Shelter Sensitisation Attended
+      $this_year = get_year();
+
+      $users =  $sql->getAll("SELECT
+                                User.id as id, email, mad_email, SA.answer as ss
+                              FROM User
+                              INNER JOIN SS_UserAnswer UA on UA.user_id = User.id
+                              INNER JOIN SS_Answer SA on SA.id = UA.answer
+                              WHERE SA.question_id = 30
+                              ORDER BY User.email
+                               ");
+      $users_ordered = array();
+      $i = 0;
+      foreach($users as $user) {
+          if($user['mad_email']) $users_ordered[$i]['email_address'] = $user['mad_email'];
+          else $users_ordered[$i]['email_address'] = $user['email'];
+          if($user['ss']=="Attended"){
+              $users_ordered[$i]['merge_fields']['USERSS'] = $user['ss'];
+          }
+          else{
+              $users_ordered[$i]['merge_fields']['USERSS'] = "Not Attended";
+          }
+          $i++;
+      }
+      return $users_ordered;
+    }
+    else if($contact_type=='user_fr_training'){
+      $this_year = get_year();
+
+      $users =  $sql->getAll("SELECT
+                                User.id as id, email, mad_email, SA.answer as fr
+                              FROM User
+                              INNER JOIN SS_UserAnswer UA on UA.user_id = User.id
+                              INNER JOIN SS_Answer SA on SA.id = UA.answer
+                              WHERE SA.question_id = 26
+                              ORDER BY User.email
+                               ");
+      $users_ordered = array();
+      $i = 0;
+      foreach($users as $user) {
+          if($user['mad_email']) $users_ordered[$i]['email_address'] = $user['mad_email'];
+          else $users_ordered[$i]['email_address'] = $user['email'];
+          if($user['fr']=="Attended"){
+              $users_ordered[$i]['merge_fields']['USERFR'] = 1;
+          }
+          else{
+              $users_ordered[$i]['merge_fields']['USERFR'] = 0;
+          }
+          $i++;
+      }
+      return $users_ordered;
+    }
+    else if($contact_type=='user_ed_training'){
+      $this_year = get_year();
+
+      $users =  $sql->getAll("SELECT
+                                User.id as id, email, mad_email, SA.answer as ed
+                              FROM User
+                              INNER JOIN SS_UserAnswer UA on UA.user_id = User.id
+                              INNER JOIN SS_Answer SA on SA.id = UA.answer
+                              WHERE SA.question_id = 22
+                              ORDER BY User.email
+                               ");
+      $users_ordered = array();
+      $i = 0;
+      foreach($users as $user) {
+          if($user['mad_email']) $users_ordered[$i]['email_address'] = $user['mad_email'];
+          else $users_ordered[$i]['email_address'] = $user['email'];
+          if($user['ed']=="Attended two trainings"){
+              $users_ordered[$i]['merge_fields']['USERED'] = 2;
+          }
+          else if($user['ed']=="Attended one training"){
+              $users_ordered[$i]['merge_fields']['USERED'] = 1;
+          }
+          else{
+              $users_ordered[$i]['merge_fields']['USERED'] = 0;
+          }
+          $i++;
+      }
+      return $users_ordered;
+    }
+    else if($contact_type=='user_tra_training'){
+      $this_year = get_year();
+
+      $users =  $sql->getAll("SELECT
+                                User.id as id, email, mad_email, SA.answer as tra
+                              FROM User
+                              INNER JOIN SS_UserAnswer UA on UA.user_id = User.id
+                              INNER JOIN SS_Answer SA on SA.id = UA.answer
+                              WHERE SA.question_id = 24
+                              ORDER BY User.email
+                               ");
+      $users_ordered = array();
+      $i = 0;
+      foreach($users as $user) {
+          if($user['mad_email']) $users_ordered[$i]['email_address'] = $user['mad_email'];
+          else $users_ordered[$i]['email_address'] = $user['email'];
+          if($user['tra']=="Attended all three trainings"){
+              $users_ordered[$i]['merge_fields']['USERTRA'] = 3;
+          }
+          else if($user['tra']=="Attended two trainings"){
+              $users_ordered[$i]['merge_fields']['USERTRA'] = 2;
+          }
+          else if($user['tra']=="Attended one training"){
+              $users_ordered[$i]['merge_fields']['USERTRA'] = 1;
+          }
+          else{
+              $users_ordered[$i]['merge_fields']['USERTRA'] = 0;
+          }
+          $i++;
+      }
+      return $users_ordered;
+    }
+    else if($contact_type=='user_city_circle'){
+      $this_year = get_year();
+
+      $users =  $sql->getAll("SELECT
+                                User.id as id, email, mad_email, SA.answer as cc
+                              FROM User
+                              INNER JOIN SS_UserAnswer UA on UA.user_id = User.id
+                              INNER JOIN SS_Answer SA on SA.id = UA.answer
+                              WHERE SA.question_id = 28
+                              ORDER BY User.email
+                               ");
+      $users_ordered = array();
+      $i = 0;
+      foreach($users as $user) {
+          if($user['mad_email']) $users_ordered[$i]['email_address'] = $user['mad_email'];
+          else $users_ordered[$i]['email_address'] = $user['email'];
+          if($user['cc']=="Attended Both"){
+              $users_ordered[$i]['merge_fields']['USERCC'] = 2;
+          }
+          else if($user['cc']=="Attended One"){
+              $users_ordered[$i]['merge_fields']['USERCC'] = 1;
+          }
+          else{
+              $users_ordered[$i]['merge_fields']['USERCC'] = 0;
+          }
+          $i++;
+      }
+      return $users_ordered;
+    }
     else{
 
       $this_year = get_year();
