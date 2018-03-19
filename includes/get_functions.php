@@ -220,11 +220,11 @@ function getUsers($sql,$contact_type='',$condition=array()) {
       }
       return $users_ordered;
     }
-    else if($contact_type=='citycircle2'){ //Volunteer with Shelter Sensitisation Attended
+    else if($contact_type=='citycircle'){ //Volunteer with Shelter Sensitisation Attended
       $this_year = get_year();
 
       $users =  $sql->getAll("SELECT
-                                User.id as id, email, mad_email, GROUP_CONCAT(UE.present) as present
+                                User.id as id, email, mad_email, MIN(UE.present) as present
                               FROM User
                               INNER JOIN UserEvent UE on UE.user_id = User.id
                               INNER JOIN Event E on E.id = UE.event_id
@@ -235,28 +235,169 @@ function getUsers($sql,$contact_type='',$condition=array()) {
                                 AND UG.year = ".$this_year."
                                 AND ET.id = 9
                                 AND UE.present > 0
-                                AND Event.
                               GROUP BY User.id
                               ORDER BY User.email
                                ");
 
-      // dump($users);
-      // exit;
+
+      $users_ordered = array();
+      $i = 0;
+      foreach($users as $user) {
+          if($user['mad_email']) $users_ordered[$i]['email_address'] = $user['mad_email'];
+          else $users_ordered[$i]['email_address'] = $user['email'];
+          $cc_query = 'SELECT value from UserData WHERE name="city_circle1_2017" AND user_id='.$user['id'];
+          $cc1 = $sql->getOne($cc_query);
+          if($cc1==''){$cc1=0;}
+          $cc2 = 0;
+          if($user['present']==1){$cc2 = 1;}
+          else if($user['present']==3){$cc2 = 0;}
+
+          $users_ordered[$i]['merge_fields']['CC'] = $cc1+$cc2;
+
+          $i++;
+      }
+      return $users_ordered;
+    }
+    else if($contact_type=='tra_training'){ //Volunteer with Shelter Sensitisation Attended
+      $this_year = get_year();
+
+      $users =  $sql->getAll("SELECT
+                                User.id as id, email, mad_email, UD.value as tra_training
+                              FROM User
+                              INNER JOIN UserData UD on UD.user_id = User.id
+                              WHERE UD.name = 'tra_training_2017'
+                              ORDER BY User.email
+                               ");
+
+
+
       $users_ordered = array();
       $i = 0;
       foreach($users as $user) {
           if($user['mad_email']) $users_ordered[$i]['email_address'] = $user['mad_email'];
           else $users_ordered[$i]['email_address'] = $user['email'];
 
-          if(strpos($user['present'],'1')>=0){
-            $users_ordered[$i]['merge_fields']['CC2'] = "Attended";
-          }
-          else if(strpos($user['present'],'3')>=0){
-            $users_ordered[$i]['merge_fields']['CC2'] = "Not Attended";
+          $users_ordered[$i]['merge_fields']['TRATRAININ'] = $user['tra_training'];
+          $i++;
+      }
+      return $users_ordered;
+    }
+    else if($contact_type=='ed_training'){ //Volunteer with Shelter Sensitisation Attended
+      $this_year = get_year();
+
+      $users =  $sql->getAll("SELECT
+                                User.id as id, email, mad_email, UD.value as tra_training
+                              FROM User
+                              INNER JOIN UserData UD on UD.user_id = User.id
+                              WHERE UD.name = 'ed_training_2017'
+                              ORDER BY User.email
+                               ");
+
+      $users_ordered = array();
+      $i = 0;
+      foreach($users as $user) {
+          if($user['mad_email']) $users_ordered[$i]['email_address'] = $user['mad_email'];
+          else $users_ordered[$i]['email_address'] = $user['email'];
+
+          $users_ordered[$i]['merge_fields']['EDTRAINING'] = $user['tra_training'];
+          $i++;
+      }
+      return $users_ordered;
+    }
+    else if($contact_type=='fr_training'){ //Volunteer with Shelter Sensitisation Attended
+      $this_year = get_year();
+
+      $users =  $sql->getAll("SELECT
+                                User.id as id, email, mad_email, UD.value as tra_training
+                              FROM User
+                              INNER JOIN UserData UD on UD.user_id = User.id
+                              WHERE UD.name = 'fr_training_2017'
+                              ORDER BY User.email
+                               ");
+
+
+
+      $users_ordered = array();
+      $i = 0;
+      foreach($users as $user) {
+          if($user['mad_email']) $users_ordered[$i]['email_address'] = $user['mad_email'];
+          else $users_ordered[$i]['email_address'] = $user['email'];
+
+          $users_ordered[$i]['merge_fields']['FRTRAINING'] = $user['tra_training'];
+          $i++;
+      }
+      return $users_ordered;
+    }
+    else if($contact_type=='childprotection'){ //Volunteer with Shelter Sensitisation Attended
+      $this_year = get_year();
+
+      $users =  $sql->getAll("SELECT
+                                User.id as id, email, mad_email, UD.value as cpp
+                              FROM User
+                              INNER JOIN UserData UD on UD.user_id = User.id
+                              WHERE UD.name = 'child_protection_policy_signed'
+                              ORDER BY User.email
+                               ");
+
+
+
+      $users_ordered = array();
+      $i = 0;
+      foreach($users as $user) {
+          if($user['mad_email']) $users_ordered[$i]['email_address'] = $user['mad_email'];
+          else $users_ordered[$i]['email_address'] = $user['email'];
+          if($user['cpp']){
+            $users_ordered[$i]['merge_fields']['CPP'] = "Yes";
           }
           else{
-            $users_ordered[$i]['merge_fields']['CC2'] = "Unknown";
+            $users_ordered[$i]['merge_fields']['CPP'] = "No";
           }
+          $i++;
+      }
+      return $users_ordered;
+    }
+    else if($contact_type=='user_credits'){ //Volunteer with Shelter Sensitisation Attended
+      $this_year = get_year();
+
+      $users =  $sql->getAll("SELECT
+                                User.id as id, email, mad_email, UD.value as credits
+                              FROM User
+                              INNER JOIN UserData UD on UD.user_id = User.id
+                              WHERE UD.name = 'user_credit_update'
+                              ORDER BY User.email
+                               ");
+
+
+
+      $users_ordered = array();
+      $i = 0;
+      foreach($users as $user) {
+          if($user['mad_email']) $users_ordered[$i]['email_address'] = $user['mad_email'];
+          else $users_ordered[$i]['email_address'] = $user['email'];
+          $users_ordered[$i]['merge_fields']['USERCREDIT'] = $user['credits'];
+          $i++;
+      }
+      return $users_ordered;
+    }
+    else if($contact_type=='tra_participation_data'){ //Volunteer with Shelter Sensitisation Attended
+      $this_year = get_year();
+
+      $users =  $sql->getAll("SELECT
+                                User.id as id, email, mad_email, UD.value as participation
+                              FROM User
+                              INNER JOIN UserData UD on UD.user_id = User.id
+                              WHERE UD.name = 'tra_participation_data'
+                              ORDER BY User.email
+                               ");
+
+
+
+      $users_ordered = array();
+      $i = 0;
+      foreach($users as $user) {
+          if($user['mad_email']) $users_ordered[$i]['email_address'] = $user['mad_email'];
+          else $users_ordered[$i]['email_address'] = $user['email'];
+          $users_ordered[$i]['merge_fields']['TRASESSION'] = $user['participation'];
           $i++;
       }
       return $users_ordered;

@@ -36,4 +36,3 @@ foreach ($unsigned as $user_id => $user) {
 $result = $batch->execute();
 
 file_put_contents('Log.txt', var_export($result));
-
