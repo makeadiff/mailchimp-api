@@ -46,7 +46,7 @@
 
   switch ($contact_type) {
     case 'volunteer':
-      $new = clearList($sql,$volunteer,$apiKey);
+      $new = clearList($sql,$volunteer,$apiKey);      
       if(!empty($new)){
         $users = getUsers($sql,$contact_type,$new);
       }

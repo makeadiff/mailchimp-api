@@ -570,7 +570,7 @@ function getUsers($sql,$contact_type='',$condition=array()) {
       $this_year = get_year();
 
       if(!empty($condition)){
-        $where = "AND User.id IN (".implode($condition).")";
+        $where = "AND User.id IN (".implode(',',$condition).")";
       }
       else{
         $where = "";
@@ -645,7 +645,11 @@ function clearList($sql,$listID,$apiKey){
     $batch_delete = curl_post_data($apiKey,$url,$batchoperations);
   }
   $new_users = array_diff($all_vol,$curr_vol);
-
+  foreach ($new_users as $new) {
+    $sql->insert('mailchimp_volunteers',array(
+      'user_id' => $vol['id']
+    ));
+  }
   return $new_users;
 }
 
