@@ -130,6 +130,10 @@
       $users = getUsers($sql,$contact_type);
       patch($volunteer,$users,$apiKey,$sql);
       break;
+    case 'fellowship_applicants':
+      $users = getUsers($sql,$contact_type);
+      patch($volunteer,$users,$apiKey,$sql);
+      break;
     default:
       $new = clearList($sql,$volunteer,$apiKey);
       if(!empty($new)) $users = getUsers($sql,$contact_type,$new);
@@ -137,6 +141,6 @@
       break;
   }
 
-  dump($users);
+  // dump($users);
 
  ?>

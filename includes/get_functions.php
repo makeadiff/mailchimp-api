@@ -515,6 +515,27 @@ function getUsers($sql,$contact_type='',$condition=array()) {
       }
       return $users_ordered;
     }
+    else if($contact_type=='fellowship_applicants'){
+      $users =  $sql->getAll("SELECT
+                                User.id as id, email, mad_email,G.name as first_pref
+                              FROM User
+                              INNER JOIN FAM_UserGroupPreference UF on UF.user_id = User.id
+                              INNER JOIN `Group` G on G.id = UF.group_id
+                              WHERE UF.preference = 1
+                              GROUP BY User.id
+                              ORDER BY User.email
+
+                               ");
+      $users_ordered = array();
+      $i = 0;
+      foreach($users as $user) {
+          if($user['mad_email']) $users_ordered[$i]['email_address'] = $user['mad_email'];
+          else $users_ordered[$i]['email_address'] = $user['email'];
+            $users_ordered[$i]['merge_fields']['FIRST_PREF'] = $user['first_pref'];
+          $i++;
+      }
+      return $users_ordered;
+    }
     else if($contact_type=='user_city_circle'){
       $this_year = get_year();
 
