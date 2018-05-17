@@ -6,6 +6,14 @@
   date_default_timezone_set('Asia/Kolkata');
 
 
+  if(isset($_GET['contact_type'])){
+    $contact_type = $_GET['contact_type'];
+  }
+  else{
+    $contact_type = 'volunteer';
+  }
+
+
   require('../common.php');
   include('../curl.php');
   require("./credentials.php");
@@ -31,14 +39,6 @@
   //
 
   $apiKey = $mailchimp_api_key;
-
-
-  if(isset($_GET['contact_type'])){
-    $contact_type = $_GET['contact_type'];
-  }
-  else{
-    $contact_type = 'volunteer';
-  }
 
 
   createtables($sql);
