@@ -8,7 +8,7 @@
 
   require('../common.php');
   include('../curl.php');
-  require("credentials.php");
+  require("./credentials.php");
   include('includes/api_functions.php');
   include('includes/get_functions.php');
 
@@ -46,7 +46,7 @@
 
   switch ($contact_type) {
     case 'volunteer':
-      $new = clearList($sql,$volunteer,$apiKey);      
+      $new = clearList($sql,$volunteer,$apiKey);
       if(!empty($new)){
         $users = getUsers($sql,$contact_type,$new);
       }
