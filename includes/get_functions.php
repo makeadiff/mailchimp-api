@@ -5,19 +5,22 @@ function getUsers($sql,$contact_type='',$condition=array()) {
     if($contact_type=='donor'){ //Donor Details
 
       $donors = $sql->getAll("SELECT
-                              first_name,email_id,created_at
-                             FROM Donours
+                              DD.name as name ,DD.email as email,DD.added_on as added_on, GROUP_CONCAT(DISTINCT DON.type) as type
+                             FROM Donut_Donor DD
+                             INNER JOIN Donut_Donation DON ON DON.donor_id = DD.id
+                             GROUP BY DD.id
                             ");
 
       $donors_ordered = array();
       $i = 0;
       foreach($donors as $donor) {
           $donors_ordered[$i] = array(
-            'email_address' => $donor['email_id'],
+            'email_address' => $donor['email'],
             'status' => 'subscribed',
             'merge_fields' => array(
-              'FNAME' => $donor['first_name'],
-              'ADDEDON' => date('m/d/Y',strtotime($donor['created_at']))
+              'FNAME' => $donor['name'],
+              'ADDEDON' => date('m/d/Y',strtotime($donor['added_on'])),
+              'TYPE' => $donor['type']
             )
           );
           $i++;

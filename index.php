@@ -53,7 +53,7 @@
       populateList($volunteer,$users,$apiKey,$sql,$contact_type);
       break;
     case 'donor':
-      $donorsql = new Sql($config_data['db_host'], $config_data['db_user'], $config_data['db_password'], 'makeadiff_cfrapp');
+      $donorsql = new Sql($config_data['db_host'], $config_data['db_user'], $config_data['db_password'], 'makeadiff_madapp');
       $users = getUsers($donorsql,$contact_type);
       populateList($donor,$users,$apiKey,$sql);
     case 'online_donor':
