@@ -106,32 +106,40 @@
       $users = getUsers($sql,$contact_type);
       patch($volunteer,$users,$apiKey,$sql);
       break;
-    case 'user_credits':
+    // case 'user_credits':
+    //   $users = getUsers($sql,$contact_type);
+    //   patch($volunteer,$users,$apiKey,$sql);
+    //   break;
+    // case 'user_sheltersensitisation':
+    //   $users = getUsers($sql,$contact_type);
+    //   patch($volunteer,$users,$apiKey,$sql);
+    //   break;
+    // case 'user_fr_training':
+    //   $users = getUsers($sql,$contact_type);
+    //   patch($volunteer,$users,$apiKey,$sql);
+    //   break;
+    // case 'user_ed_training':
+    //   $users = getUsers($sql,$contact_type);
+    //   patch($volunteer,$users,$apiKey,$sql);
+    //   break;
+    // case 'user_tra_training':
+    //   $users = getUsers($sql,$contact_type);
+    //   patch($volunteer,$users,$apiKey,$sql);
+    //   break;
+    // case 'user_city_circle':
+    //   $users = getUsers($sql,$contact_type);
+    //   patch($volunteer,$users,$apiKey,$sql);
+    //   break;
+    // case 'fellowship_applicants':
+    //   $users = getUsers($sql,$contact_type);
+    //   patch($volunteer,$users,$apiKey,$sql);
+    //   break;
+    case 'fellows_strats':
       $users = getUsers($sql,$contact_type);
-      patch($volunteer,$users,$apiKey,$sql);
+      populateList($fellows_strats,$users,$apiKey,$sql,$contact_type);
       break;
-    case 'user_sheltersensitisation':
-      $users = getUsers($sql,$contact_type);
-      patch($volunteer,$users,$apiKey,$sql);
-      break;
-    case 'user_fr_training':
-      $users = getUsers($sql,$contact_type);
-      patch($volunteer,$users,$apiKey,$sql);
-      break;
-    case 'user_ed_training':
-      $users = getUsers($sql,$contact_type);
-      patch($volunteer,$users,$apiKey,$sql);
-      break;
-    case 'user_tra_training':
-      $users = getUsers($sql,$contact_type);
-      patch($volunteer,$users,$apiKey,$sql);
-      break;
-    case 'user_city_circle':
-      $users = getUsers($sql,$contact_type);
-      patch($volunteer,$users,$apiKey,$sql);
-      break;
-    case 'fellowship_applicants':
-      $users = getUsers($sql,$contact_type);
+    case 'vol_years':
+      $users = getUsers($sql,$contact_type);      
       patch($volunteer,$users,$apiKey,$sql);
       break;
     default:

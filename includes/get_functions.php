@@ -568,6 +568,59 @@ function getUsers($sql,$contact_type='',$condition=array()) {
       }
       return $users_ordered;
     }
+    else if($contact_type=='fellows_strats'){
+      $this_year = get_year();
+
+      $users =  $sql->getAll("SELECT
+                                U.id as id,U.name as name, U.email as email, U.mad_email as mad_email, G.name as role
+                              FROM User U
+                              INNER JOIN UserGroup UG ON UG.user_id = U.id
+                              INNER JOIN `Group` G ON G.id = UG.group_id
+                              WHERE (G.type = 'fellow' OR G.type='strat')
+                              AND U.user_type = 'volunteer'
+                              AND G.name <> 'Strat'
+                              AND G.id <> 382
+                              AND U.status = 1
+                              AND UG.year = 2018
+                              GROUP BY U.id
+                               ");
+
+
+      $users_ordered = array();
+      $i = 0;
+      foreach($users as $user) {
+          if($user['mad_email']) $users_ordered[$i]['email_address'] = $user['mad_email'];
+          else $users_ordered[$i]['email_address'] = $user['email'];
+          $users_ordered[$i]['status'] = 'subscribed';
+          $users_ordered[$i]['merge_fields']['ROLE'] = $user['role'];
+          $users_ordered[$i]['merge_fields']['NAME'] = $user['name'];
+          $i++;
+      }
+      return $users_ordered;
+    }
+    else if($contact_type=='vol_years'){
+      $this_year = get_year();
+
+      $users =  $sql->getAll("SELECT
+                                U.id as id,U.name as name, U.email as email, U.mad_email as mad_email, GROUP_CONCAT(DISTINCT UG.year) as vol_years
+                              FROM User U
+                              INNER JOIN UserGroup UG ON UG.user_id = U.id
+                              AND U.user_type = 'volunteer'
+                              AND U.status = 1
+                              GROUP BY U.id
+                               ");
+      // dump($users);
+      // exit;
+      $users_ordered = array();
+      $i = 0;
+      foreach($users as $user) {
+          if($user['mad_email']) $users_ordered[$i]['email_address'] = $user['mad_email'];
+          else $users_ordered[$i]['email_address'] = $user['email'];
+          $users_ordered[$i]['merge_fields']['VOLYEAR'] = $user['vol_years'];
+          $i++;
+      }
+      return $users_ordered;
+    }
     else{
 
       $this_year = get_year();
@@ -586,6 +639,7 @@ function getUsers($sql,$contact_type='',$condition=array()) {
                               INNER JOIN UserGroup UG on UG.user_id = User.id
                               INNER JOIN `Group` G on G.id = UG.group_id
                               WHERE user_type = 'volunteer' AND User.status = 1 AND UG.year = ".$this_year." ".$where."
+                              AND C.id <=26
                               GROUP BY User.id
                               ORDER BY User.name
                                ");
