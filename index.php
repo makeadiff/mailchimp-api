@@ -139,7 +139,11 @@
       populateList($fellows_strats,$users,$apiKey,$sql,$contact_type);
       break;
     case 'vol_years':
-      $users = getUsers($sql,$contact_type);      
+      $users = getUsers($sql,$contact_type);
+      patch($volunteer,$users,$apiKey,$sql);
+      break;
+    case 'madapp_id':
+      $users = getUsers($sql,$contact_type);
       patch($volunteer,$users,$apiKey,$sql);
       break;
     default:

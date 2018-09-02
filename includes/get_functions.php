@@ -605,7 +605,7 @@ function getUsers($sql,$contact_type='',$condition=array()) {
                                 U.id as id,U.name as name, U.email as email, U.mad_email as mad_email, GROUP_CONCAT(DISTINCT UG.year) as vol_years
                               FROM User U
                               INNER JOIN UserGroup UG ON UG.user_id = U.id
-                              AND U.user_type = 'volunteer'
+                              WHERE U.user_type = 'volunteer'
                               AND U.status = 1
                               GROUP BY U.id
                                ");
@@ -617,6 +617,28 @@ function getUsers($sql,$contact_type='',$condition=array()) {
           if($user['mad_email']) $users_ordered[$i]['email_address'] = $user['mad_email'];
           else $users_ordered[$i]['email_address'] = $user['email'];
           $users_ordered[$i]['merge_fields']['VOLYEAR'] = $user['vol_years'];
+          $i++;
+      }
+      return $users_ordered;
+    }
+    else if($contact_type=='madapp_id'){
+      $this_year = get_year();
+
+      $users =  $sql->getAll("SELECT
+                                U.id as id,U.name as name, U.email as email, U.mad_email as mad_email
+                              FROM User U
+                              WHERE U.user_type = 'volunteer'
+                              AND U.status = 1
+                              GROUP BY U.id
+                               ");
+      // dump($users);
+      // exit;
+      $users_ordered = array();
+      $i = 0;
+      foreach($users as $user) {
+          if($user['mad_email']) $users_ordered[$i]['email_address'] = $user['mad_email'];
+          else $users_ordered[$i]['email_address'] = $user['email'];
+          $users_ordered[$i]['merge_fields']['MADAPPID'] = $user['id'];
           $i++;
       }
       return $users_ordered;
