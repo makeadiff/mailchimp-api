@@ -102,7 +102,15 @@
       $users = getUsers($sql,$contact_type);
       patch($volunteer,$users,$apiKey,$sql);
       break;
-    case 'tra_participation_data':
+    // case 'tra_participation_data':
+    //   $users = getUsers($sql,$contact_type);
+    //   patch($volunteer,$users,$apiKey,$sql);
+    //   break;
+    case 'volunteer_type':
+      $users = getUsers($sql,$contact_type);
+      patch($volunteer,$users,$apiKey,$sql);
+      break;
+    case 'primary_vertical':
       $users = getUsers($sql,$contact_type);
       patch($volunteer,$users,$apiKey,$sql);
       break;
