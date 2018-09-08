@@ -674,10 +674,6 @@ function getUsers($sql,$contact_type='',$condition=array()) {
     }
     else if($contact_type=='primary_vertical'){
       $this_year = get_year();
-
-
-
-
       // Update the PRIMARY Vertical of a Volunteer
       $users =  $sql->getAll("SELECT
                                 U.id as id,U.name as name, U.email as email, U.mad_email as mad_email
@@ -702,7 +698,25 @@ function getUsers($sql,$contact_type='',$condition=array()) {
 
           $users_ordered[$i]['merge_fields']['PRI_VERT'] = $sql->getOne($q);
           $i++;
-      }      
+      }
+      return $users_ordered;
+    }
+    else if($contact_type=='delete_old'){
+      $this_year = get_year();
+      // Update the PRIMARY Vertical of a Volunteer
+      $users =  $sql->getAll("SELECT
+                                U.id as id,U.name as name, U.email as email, U.mad_email as mad_email
+                              FROM User U
+                              WHERE U.user_type <> 'volunteer'
+                              AND U.user_type <> 'applicant'
+                              AND U.status = 1
+                               ");
+      $users_ordered = array();
+      $i = 0;
+      foreach($users as $user) {
+          $users_ordered[$i]['email_address'] = $user['email'];
+          $i++;
+      }
       return $users_ordered;
     }
     else{

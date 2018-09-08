@@ -61,6 +61,21 @@ function patch($listID,$users,$apiKey,$sql){ //parameter 1. List_id, 2. array of
 
 }
 
+function delete($listID,$users,$apiKey,$sql){ //parameter 1. List_id, 2. array of members, 3. apiKey, 4.sql Object for makeadiff_madapp, 5. Contact Type
+  $dataCenter = substr($apiKey,strpos($apiKey,'-')+1);
+  $batchoperations = array();
+  $i=0;
+  foreach ($users as $user) {
+    $user = utf8ize($user); // dump(json_encode($user));  // echo json_last_error();
+    $batchoperations['operations'][$i]['method']='DELETE';
+    $batchoperations['operations'][$i]['path']='lists/' . $listID . '/members/'.md5(strtolower($user['email_address']));
+    $i++;
+  }
+
+  $url = 'https://' . $dataCenter . '.api.mailchimp.com/3.0/batches';
+  $batch_add = curl_post_data($apiKey,$url,$batchoperations);  
+}
+
 function count_members_in_list($listID,$apiKey){ //Function to get the number of members in the list identified by the List ID
   $dataCenter = substr($apiKey,strpos($apiKey,'-')+1);
   $url = 'https://' . $dataCenter . '.api.mailchimp.com/3.0/lists/'.$listID.'/members?field=total_items';
