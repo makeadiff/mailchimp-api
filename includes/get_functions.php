@@ -232,12 +232,12 @@ function getUsers($sql,$contact_type='',$condition=array()) {
                               INNER JOIN UserEvent UE on UE.user_id = User.id
                               INNER JOIN Event E on E.id = UE.event_id
                               INNER JOIN Event_Type ET on ET.id = E.event_type_id
-                              INNER JOIN UserGroup UG on UG.user_id = User.id
-                              WHERE user_type = 'volunteer'
+                              WHERE User.user_type = 'volunteer'
                                 AND User.status = 1
-                                AND UG.year = ".$this_year."
-                                AND ET.id = 9
-                                AND UE.present > 0
+                                AND ET.id = '8'
+                                AND UE.present > '0'
+                                AND E.status = '1'
+                                AND E.starts_on > '2018-09-01'
                               GROUP BY User.id
                               ORDER BY User.email
                                ");
@@ -246,16 +246,13 @@ function getUsers($sql,$contact_type='',$condition=array()) {
       $users_ordered = array();
       $i = 0;
       foreach($users as $user) {
+          $cc = '';
           if($user['mad_email']) $users_ordered[$i]['email_address'] = $user['mad_email'];
           else $users_ordered[$i]['email_address'] = $user['email'];
-          $cc_query = 'SELECT value from UserData WHERE name="city_circle1_2017" AND user_id='.$user['id'];
-          $cc1 = $sql->getOne($cc_query);
-          if($cc1==''){$cc1=0;}
-          $cc2 = 0;
-          if($user['present']==1){$cc2 = 1;}
-          else if($user['present']==3){$cc2 = 0;}
+          if($user['present']==1){$cc = 'present';}
+          else if($user['present']==3){$cc = 'absent';}
 
-          $users_ordered[$i]['merge_fields']['CC'] = $cc1+$cc2;
+          $users_ordered[$i]['merge_fields']['CC1'] = $cc;
 
           $i++;
       }

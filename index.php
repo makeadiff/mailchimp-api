@@ -82,22 +82,26 @@
       $users = getUsers($sql,$contact_type);
       patch($volunteer,$users,$apiKey,$sql);
       break;
+    case 'vertical_training':
+      $users = getUsers($sql,$contact_type);
+      patch($volunteer,$users,$apiKey,$sql);
+      break;
     case 'sheltersensitisation':
       $users = getUsers($sql,$contact_type);
       patch($volunteer,$users,$apiKey,$sql);
       break;
-    case 'tra_training':
-      $users = getUsers($sql,$contact_type);
-      patch($volunteer,$users,$apiKey,$sql);
-      break;
-    case 'ed_training':
-      $users = getUsers($sql,$contact_type);
-      patch($volunteer,$users,$apiKey,$sql);
-      break;
-    case 'fr_training':
-      $users = getUsers($sql,$contact_type);
-      patch($volunteer,$users,$apiKey,$sql);
-      break;
+    // case 'tra_training':
+    //   $users = getUsers($sql,$contact_type);
+    //   patch($volunteer,$users,$apiKey,$sql);
+    //   break;
+    // case 'ed_training':
+    //   $users = getUsers($sql,$contact_type);
+    //   patch($volunteer,$users,$apiKey,$sql);
+    //   break;
+    // case 'fr_training':
+    //   $users = getUsers($sql,$contact_type);
+    //   patch($volunteer,$users,$apiKey,$sql);
+    //   break;
     case 'childprotection':
       $users = getUsers($sql,$contact_type);
       patch($volunteer,$users,$apiKey,$sql);
