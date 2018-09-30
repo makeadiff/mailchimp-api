@@ -52,6 +52,13 @@
       }
       populateList($volunteer,$users,$apiKey,$sql,$contact_type);
       break;
+    case 'volunteer_update':
+      $new = clearList($sql,$volunteer,$apiKey);
+      if(!empty($new)){
+        $users = getUsers($sql,'volunteer',$new);
+      }
+      patch($volunteer,$users,$apiKey,$sql);
+      break;
     case 'donor':
       $donorsql = new Sql($config_data['db_host'], $config_data['db_user'], $config_data['db_password'], 'makeadiff_madapp');
       $users = getUsers($donorsql,$contact_type);
@@ -90,18 +97,6 @@
       $users = getUsers($sql,$contact_type);
       patch($volunteer,$users,$apiKey,$sql);
       break;
-    // case 'tra_training':
-    //   $users = getUsers($sql,$contact_type);
-    //   patch($volunteer,$users,$apiKey,$sql);
-    //   break;
-    // case 'ed_training':
-    //   $users = getUsers($sql,$contact_type);
-    //   patch($volunteer,$users,$apiKey,$sql);
-    //   break;
-    // case 'fr_training':
-    //   $users = getUsers($sql,$contact_type);
-    //   patch($volunteer,$users,$apiKey,$sql);
-    //   break;
     case 'childprotection':
       $users = getUsers($sql,$contact_type);
       patch($volunteer,$users,$apiKey,$sql);

@@ -237,7 +237,7 @@ function getUsers($sql,$contact_type='',$condition=array()) {
                                 AND ET.id = '8'
                                 AND UE.present > '0'
                                 AND E.status = '1'
-                                AND E.starts_on > '2018-09-01'
+                                AND E.starts_on > '".$this_year."-09-01'
                               GROUP BY User.id
                               ORDER BY User.email
                                ");
@@ -258,74 +258,45 @@ function getUsers($sql,$contact_type='',$condition=array()) {
       }
       return $users_ordered;
     }
-    else if($contact_type=='tra_training'){ //Volunteer with Shelter Sensitisation Attended
+    else if($contact_type=='vertical_training'){ //Volunteer with Shelter Sensitisation Attended
       $this_year = get_year();
 
       $users =  $sql->getAll("SELECT
-                                User.id as id, email, mad_email, UD.value as tra_training
+                                User.id as id, email, mad_email, MIN(UE.present) as present,
+                                CASE E.event_type_id
+                              		WHEN '17' THEN 'Ed Support'
+                              		WHEN '21' THEN 'Transition Readiness'
+                              		WHEN '29' THEN 'Foundational Programme'
+                              		WHEN '30' THEN 'Aftercare'
+                              		WHEN '31' THEN 'Fundraising'
+                              	END as 'Vertical'
                               FROM User
-                              INNER JOIN UserData UD on UD.user_id = User.id
-                              WHERE UD.name = 'tra_training_2017'
-                              ORDER BY User.email
-                               ");
-
-
-
-      $users_ordered = array();
-      $i = 0;
-      foreach($users as $user) {
-          if($user['mad_email']) $users_ordered[$i]['email_address'] = $user['mad_email'];
-          else $users_ordered[$i]['email_address'] = $user['email'];
-
-          $users_ordered[$i]['merge_fields']['TRATRAININ'] = $user['tra_training'];
-          $i++;
-      }
-      return $users_ordered;
-    }
-    else if($contact_type=='ed_training'){ //Volunteer with Shelter Sensitisation Attended
-      $this_year = get_year();
-
-      $users =  $sql->getAll("SELECT
-                                User.id as id, email, mad_email, UD.value as tra_training
-                              FROM User
-                              INNER JOIN UserData UD on UD.user_id = User.id
-                              WHERE UD.name = 'ed_training_2017'
+                              INNER JOIN UserEvent UE on UE.user_id = User.id
+                              INNER JOIN Event E on E.id = UE.event_id
+                              INNER JOIN Event_Type ET on ET.id = E.event_type_id
+                              WHERE User.user_type = 'volunteer'
+                                AND User.status = 1
+                                AND ET.id IN ('17','21','29','30','31')
+                                AND UE.present > '0'
+                                AND E.status = '1'
+                              GROUP BY User.id
                               ORDER BY User.email
                                ");
 
       $users_ordered = array();
       $i = 0;
       foreach($users as $user) {
+          $vt = '';
           if($user['mad_email']) $users_ordered[$i]['email_address'] = $user['mad_email'];
           else $users_ordered[$i]['email_address'] = $user['email'];
-
-          $users_ordered[$i]['merge_fields']['EDTRAINING'] = $user['tra_training'];
+          if($user['present']==1){$vt = 'present';}
+          else if($user['present']==3){$vt = 'absent';}
+          $users_ordered[$i]['merge_fields']['VT'] = $vt;
+          $users_ordered[$i]['merge_fields']['VERT_TRAIN'] = $user['Vertical'];
           $i++;
       }
-      return $users_ordered;
-    }
-    else if($contact_type=='fr_training'){ //Volunteer with Shelter Sensitisation Attended
-      $this_year = get_year();
-
-      $users =  $sql->getAll("SELECT
-                                User.id as id, email, mad_email, UD.value as tra_training
-                              FROM User
-                              INNER JOIN UserData UD on UD.user_id = User.id
-                              WHERE UD.name = 'fr_training_2017'
-                              ORDER BY User.email
-                               ");
-
-
-
-      $users_ordered = array();
-      $i = 0;
-      foreach($users as $user) {
-          if($user['mad_email']) $users_ordered[$i]['email_address'] = $user['mad_email'];
-          else $users_ordered[$i]['email_address'] = $user['email'];
-
-          $users_ordered[$i]['merge_fields']['FRTRAINING'] = $user['tra_training'];
-          $i++;
-      }
+      dump($users_ordered);
+      exit;
       return $users_ordered;
     }
     else if($contact_type=='childprotection'){ //Volunteer with Shelter Sensitisation Attended
@@ -423,93 +394,6 @@ function getUsers($sql,$contact_type='',$condition=array()) {
           }
           else{
               $users_ordered[$i]['merge_fields']['USERSS'] = "Not Attended";
-          }
-          $i++;
-      }
-      return $users_ordered;
-    }
-    else if($contact_type=='user_fr_training'){
-      $this_year = get_year();
-
-      $users =  $sql->getAll("SELECT
-                                User.id as id, email, mad_email, SA.answer as fr
-                              FROM User
-                              INNER JOIN SS_UserAnswer UA on UA.user_id = User.id
-                              INNER JOIN SS_Answer SA on SA.id = UA.answer
-                              WHERE SA.question_id = 26
-                              ORDER BY User.email
-                               ");
-      $users_ordered = array();
-      $i = 0;
-      foreach($users as $user) {
-          if($user['mad_email']) $users_ordered[$i]['email_address'] = $user['mad_email'];
-          else $users_ordered[$i]['email_address'] = $user['email'];
-          if($user['fr']=="Attended"){
-              $users_ordered[$i]['merge_fields']['USERFR'] = 1;
-          }
-          else{
-              $users_ordered[$i]['merge_fields']['USERFR'] = 0;
-          }
-          $i++;
-      }
-      return $users_ordered;
-    }
-    else if($contact_type=='user_ed_training'){
-      $this_year = get_year();
-
-      $users =  $sql->getAll("SELECT
-                                User.id as id, email, mad_email, SA.answer as ed
-                              FROM User
-                              INNER JOIN SS_UserAnswer UA on UA.user_id = User.id
-                              INNER JOIN SS_Answer SA on SA.id = UA.answer
-                              WHERE SA.question_id = 22
-                              ORDER BY User.email
-                               ");
-      $users_ordered = array();
-      $i = 0;
-      foreach($users as $user) {
-          if($user['mad_email']) $users_ordered[$i]['email_address'] = $user['mad_email'];
-          else $users_ordered[$i]['email_address'] = $user['email'];
-          if($user['ed']=="Attended two trainings"){
-              $users_ordered[$i]['merge_fields']['USERED'] = 2;
-          }
-          else if($user['ed']=="Attended one training"){
-              $users_ordered[$i]['merge_fields']['USERED'] = 1;
-          }
-          else{
-              $users_ordered[$i]['merge_fields']['USERED'] = 0;
-          }
-          $i++;
-      }
-      return $users_ordered;
-    }
-    else if($contact_type=='user_tra_training'){
-      $this_year = get_year();
-
-      $users =  $sql->getAll("SELECT
-                                User.id as id, email, mad_email, SA.answer as tra
-                              FROM User
-                              INNER JOIN SS_UserAnswer UA on UA.user_id = User.id
-                              INNER JOIN SS_Answer SA on SA.id = UA.answer
-                              WHERE SA.question_id = 24
-                              ORDER BY User.email
-                               ");
-      $users_ordered = array();
-      $i = 0;
-      foreach($users as $user) {
-          if($user['mad_email']) $users_ordered[$i]['email_address'] = $user['mad_email'];
-          else $users_ordered[$i]['email_address'] = $user['email'];
-          if($user['tra']=="Attended all three trainings"){
-              $users_ordered[$i]['merge_fields']['USERTRA'] = 3;
-          }
-          else if($user['tra']=="Attended two trainings"){
-              $users_ordered[$i]['merge_fields']['USERTRA'] = 2;
-          }
-          else if($user['tra']=="Attended one training"){
-              $users_ordered[$i]['merge_fields']['USERTRA'] = 1;
-          }
-          else{
-              $users_ordered[$i]['merge_fields']['USERTRA'] = 0;
           }
           $i++;
       }
