@@ -294,9 +294,7 @@ function getUsers($sql,$contact_type='',$condition=array()) {
           $users_ordered[$i]['merge_fields']['VT'] = $vt;
           $users_ordered[$i]['merge_fields']['VERT_TRAIN'] = $user['Vertical'];
           $i++;
-      }
-      dump($users_ordered);
-      exit;
+      }      
       return $users_ordered;
     }
     else if($contact_type=='childprotection'){ //Volunteer with Shelter Sensitisation Attended
