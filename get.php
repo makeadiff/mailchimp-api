@@ -1,5 +1,6 @@
 <?php
 
+  if(isset($_GET['batch_id']))
 
 
   require('credentials.php');

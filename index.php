@@ -117,10 +117,10 @@
       $users = getUsers($sql,$contact_type);
       delete($volunteer,$users,$apiKey,$sql);
       break;
-    // case 'user_credits':
-    //   $users = getUsers($sql,$contact_type);
-    //   patch($volunteer,$users,$apiKey,$sql);
-    //   break;
+    case 'user_credits':
+      $users = getUsers($sql,$contact_type);
+      patch($volunteer,$users,$apiKey,$sql);
+      break;
     // case 'user_sheltersensitisation':
     //   $users = getUsers($sql,$contact_type);
     //   patch($volunteer,$users,$apiKey,$sql);
