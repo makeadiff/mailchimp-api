@@ -258,6 +258,41 @@ function getUsers($sql,$contact_type='',$condition=array()) {
       }
       return $users_ordered;
     }
+    else if($contact_type=='citycircle2'){ //Volunteer with Shelter Sensitisation Attended
+      $this_year = get_year();
+
+      $users =  $sql->getAll("SELECT
+                                User.id as id, email, mad_email, MIN(UE.present) as present
+                              FROM User
+                              INNER JOIN UserEvent UE on UE.user_id = User.id
+                              INNER JOIN Event E on E.id = UE.event_id
+                              INNER JOIN Event_Type ET on ET.id = E.event_type_id
+                              WHERE User.user_type = 'volunteer'
+                                AND User.status = 1
+                                AND ET.id = '9'
+                                AND UE.present > '0'
+                                AND E.status = '1'
+                                AND E.starts_on > '".$this_year."-09-01'
+                              GROUP BY User.id
+                              ORDER BY User.email
+                               ");
+
+
+      $users_ordered = array();
+      $i = 0;
+      foreach($users as $user) {
+          $cc = '';
+          if($user['mad_email']) $users_ordered[$i]['email_address'] = $user['mad_email'];
+          else $users_ordered[$i]['email_address'] = $user['email'];
+          if($user['present']==1){$cc = 'present';}
+          else if($user['present']==3){$cc = 'absent';}
+
+          $users_ordered[$i]['merge_fields']['CC2'] = $cc;
+
+          $i++;
+      }
+      return $users_ordered;
+    }
     else if($contact_type=='vertical_training'){ //Volunteer with Shelter Sensitisation Attended
       $this_year = get_year();
 

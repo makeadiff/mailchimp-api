@@ -89,6 +89,10 @@
       $users = getUsers($sql,$contact_type);
       patch($volunteer,$users,$apiKey,$sql);
       break;
+    case 'citycircle2':
+      $users = getUsers($sql,$contact_type);
+      patch($volunteer,$users,$apiKey,$sql);
+      break;
     case 'vertical_training':
       $users = getUsers($sql,$contact_type);
       patch($volunteer,$users,$apiKey,$sql);
