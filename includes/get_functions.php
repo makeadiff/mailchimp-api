@@ -325,29 +325,29 @@ function getUsers($sql,$contact_type='',$condition=array()) {
       }
       return $users_ordered;
     }
-    else if($contact_type=='user_credits'){ //Volunteer with Shelter Sensitisation Attended
-      $this_year = get_year();
-
-      $users =  $sql->getAll("SELECT
-                                User.id as id, email, mad_email, UD.value as credits
-                              FROM User
-                              INNER JOIN UserData UD on UD.user_id = User.id
-                              WHERE UD.name = 'user_credit_update'
-                              ORDER BY User.email
-                               ");
-
-
-
-      $users_ordered = array();
-      $i = 0;
-      foreach($users as $user) {
-          if($user['mad_email']) $users_ordered[$i]['email_address'] = $user['mad_email'];
-          else $users_ordered[$i]['email_address'] = $user['email'];
-          $users_ordered[$i]['merge_fields']['USERCREDIT'] = $user['credits'];
-          $i++;
-      }
-      return $users_ordered;
-    }
+    // else if($contact_type=='user_credits'){ //Volunteer with Shelter Sensitisation Attended
+    //   $this_year = get_year();
+    //
+    //   $users =  $sql->getAll("SELECT
+    //                             User.id as id, email, mad_email, UD.value as credits
+    //                           FROM User
+    //                           INNER JOIN UserData UD on UD.user_id = User.id
+    //                           WHERE UD.name = 'user_credit_update'
+    //                           ORDER BY User.email
+    //                            ");
+    //
+    //
+    //
+    //   $users_ordered = array();
+    //   $i = 0;
+    //   foreach($users as $user) {
+    //       if($user['mad_email']) $users_ordered[$i]['email_address'] = $user['mad_email'];
+    //       else $users_ordered[$i]['email_address'] = $user['email'];
+    //       $users_ordered[$i]['merge_fields']['USERCREDIT'] = $user['credits'];
+    //       $i++;
+    //   }
+    //   return $users_ordered;
+    // }
     else if($contact_type=='tra_participation_data'){ //Volunteer with Shelter Sensitisation Attended
       $this_year = get_year();
 
