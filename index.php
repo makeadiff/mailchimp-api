@@ -46,17 +46,13 @@
 
   switch ($contact_type) {
     case 'volunteer':
-      $new = clearList($sql,$volunteer,$apiKey);
-      if(!empty($new)){
-        $users = getUsers($sql,$contact_type,$new);
-      }
+      $new = array();
+      $users = getUsers($sql,$contact_type,$new);
       populateList($volunteer,$users,$apiKey,$sql,$contact_type);
       break;
     case 'volunteer_update':
-      $new = clearList($sql,$volunteer,$apiKey);
-      if(!empty($new)){
-        $users = getUsers($sql,'volunteer',$new);
-      }
+      $new = array();
+      $users = getUsers($sql,'volunteer',$new);      
       patch($volunteer,$users,$apiKey,$sql);
       break;
     case 'donor':
