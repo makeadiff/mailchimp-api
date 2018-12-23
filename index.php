@@ -1,4 +1,4 @@
-
+ 
 <title>Mailchimp Integraion</title>
 
 <?php
@@ -15,7 +15,7 @@
 
 
   require('../common.php');
-  include('../curl.php');
+  include('curl.php');
   require("./credentials.php");
   include('includes/api_functions.php');
   include('includes/get_functions.php');
@@ -52,7 +52,7 @@
       break;
     case 'volunteer_update':
       $new = array();
-      $users = getUsers($sql,'volunteer',$new);      
+      $users = getUsers($sql,'volunteer',$new);
       patch($volunteer,$users,$apiKey,$sql);
       break;
     case 'donor':
