@@ -1,4 +1,4 @@
- 
+
 <title>Mailchimp Integraion</title>
 
 <?php
@@ -59,6 +59,7 @@
       $donorsql = new Sql($config_data['db_host'], $config_data['db_user'], $config_data['db_password'], 'makeadiff_madapp');
       $users = getUsers($donorsql,$contact_type);
       populateList($donor,$users,$apiKey,$sql);
+      break;
     case 'online_donor':
       $donorsql = new Sql($config_data['db_host'], $config_data['db_user'], $config_data['db_password'], 'makeadiff_mad');
       $users = getUsers($donorsql,$contact_type);
@@ -81,7 +82,7 @@
       $users = getUsers($sql,$contact_type);
       patch($volunteer,$users,$apiKey,$sql);
       break;
-    case 'citycircle':
+    case 'citycircle1':
       $users = getUsers($sql,$contact_type);
       patch($volunteer,$users,$apiKey,$sql);
       break;
@@ -93,7 +94,11 @@
       $users = getUsers($sql,$contact_type);
       patch($volunteer,$users,$apiKey,$sql);
       break;
-    case 'sheltersensitisation':
+    case 'sheltersensitisation1':
+      $users = getUsers($sql,$contact_type);
+      patch($volunteer,$users,$apiKey,$sql);
+      break;
+    case 'sheltersensitisation2':
       $users = getUsers($sql,$contact_type);
       patch($volunteer,$users,$apiKey,$sql);
       break;
@@ -101,10 +106,10 @@
       $users = getUsers($sql,$contact_type);
       patch($volunteer,$users,$apiKey,$sql);
       break;
-    // case 'tra_participation_data':
-    //   $users = getUsers($sql,$contact_type);
-    //   patch($volunteer,$users,$apiKey,$sql);
-    //   break;
+    case 'user_participation_data':
+      $users = getUsers($sql,$contact_type);
+      patch($volunteer,$users,$apiKey,$sql);
+      break;
     case 'volunteer_type':
       $users = getUsers($sql,$contact_type);
       patch($volunteer,$users,$apiKey,$sql);
@@ -133,7 +138,7 @@
     //   $users = getUsers($sql,$contact_type);
     //   patch($volunteer,$users,$apiKey,$sql);
     //   break;
-    // case 'user_tra_training':
+    // case 'user_tr_training':
     //   $users = getUsers($sql,$contact_type);
     //   patch($volunteer,$users,$apiKey,$sql);
     //   break;

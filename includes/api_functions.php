@@ -73,7 +73,7 @@ function delete($listID,$users,$apiKey,$sql){ //parameter 1. List_id, 2. array o
   }
 
   $url = 'https://' . $dataCenter . '.api.mailchimp.com/3.0/batches';
-  $batch_add = curl_post_data($apiKey,$url,$batchoperations);  
+  $batch_add = curl_post_data($apiKey,$url,$batchoperations);
 }
 
 function count_members_in_list($listID,$apiKey){ //Function to get the number of members in the list identified by the List ID

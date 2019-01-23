@@ -144,7 +144,7 @@ function getUsers($sql,$contact_type='',$condition=array()) {
                               WHERE user_type = 'volunteer'
                                 AND User.status = 1
                                 AND UG.year = ".$this_year." ".$where."
-                                AND D.added_on >= '2017-08-01'
+                                AND D.added_on >= '".$this_year."-06-01'
                               GROUP BY User.id
                               ORDER BY User.name
                                ");
@@ -177,7 +177,7 @@ function getUsers($sql,$contact_type='',$condition=array()) {
                               INNER JOIN Donut_Donation D on D.fundraiser_user_id = User.id
                               WHERE user_type = 'volunteer'
                                 AND User.status = 1
-                                AND D.added_on >= '2017-08-01'
+                                AND D.added_on >= '".$this_year."-06-01'
                               GROUP BY User.id
                               ORDER BY User.name
                                ");
@@ -192,38 +192,83 @@ function getUsers($sql,$contact_type='',$condition=array()) {
       }
       return $users_ordered;
     }
-    else if($contact_type=='sheltersensitisation'){ //Volunteer with Shelter Sensitisation Attended
+    else if($contact_type=='sheltersensitisation1'){ //Volunteer with Shelter Sensitisation Attended
       $this_year = get_year();
 
       $users =  $sql->getAll("SELECT
-                                User.id as id, email, mad_email, UD.value as ss
+                                User.id as id, email, mad_email, MIN(UE.present) as present, User.joined_on as joined_on
                               FROM User
-                              INNER JOIN UserData UD on UD.user_id = User.id
-                              WHERE user_type = 'volunteer'
+                              INNER JOIN UserEvent UE on UE.user_id = User.id
+                              INNER JOIN Event E on E.id = UE.event_id
+                              INNER JOIN Event_Type ET on ET.id = E.event_type_id
+                              WHERE User.user_type = 'volunteer'
                                 AND User.status = 1
-                                AND UD.name='shelter_sensitisation_2017'
+                                AND ET.id = '1'
+                                AND UE.present > '0'
+                                AND E.status = '1'
+                                AND E.starts_on > '".$this_year."-06-01'
                               GROUP BY User.id
                               ORDER BY User.email
                                ");
 
-      // dump($users);
-      // exit;
       $users_ordered = array();
       $i = 0;
       foreach($users as $user) {
+          $ss = '';
           if($user['mad_email']) $users_ordered[$i]['email_address'] = $user['mad_email'];
           else $users_ordered[$i]['email_address'] = $user['email'];
-          if($user['ss']==1){
-            $users_ordered[$i]['merge_fields']['SS'] = 'Attended';
+          if($user['present']==1){
+            $ss = 'present';
           }
-          else{
-            $users_ordered[$i]['merge_fields']['SS'] = 'Not Attended';
+          else if($user['present']==3){
+            $ss = 'absent';
           }
+
+          if($user['joined_on']<=$this_year.'-03-01'){
+            $ss = 'present';
+          }
+
+          $users_ordered[$i]['merge_fields']['SS1'] = $ss;
+
           $i++;
       }
       return $users_ordered;
     }
-    else if($contact_type=='citycircle'){ //Volunteer with Shelter Sensitisation Attended
+    else if($contact_type=='sheltersensitisation2'){ //Volunteer with Shelter Sensitisation Attended
+      $this_year = get_year();
+
+      $users =  $sql->getAll("SELECT
+                                User.id as id, email, mad_email, MIN(UE.present) as present
+                              FROM User
+                              INNER JOIN UserEvent UE on UE.user_id = User.id
+                              INNER JOIN Event E on E.id = UE.event_id
+                              INNER JOIN Event_Type ET on ET.id = E.event_type_id
+                              WHERE User.user_type = 'volunteer'
+                                AND User.status = 1
+                                AND ET.id = '35'
+                                AND UE.present > '0'
+                                AND E.status = '1'
+                                AND E.starts_on > '".$this_year."-06-01'
+                              GROUP BY User.id
+                              ORDER BY User.email
+                               ");
+
+      $users_ordered = array();
+      $i = 0;
+      foreach($users as $user) {
+          $cc = '';
+          if($user['mad_email']) $users_ordered[$i]['email_address'] = $user['mad_email'];
+          else $users_ordered[$i]['email_address'] = $user['email'];
+          if($user['present']==1){$cc = 'present';}
+          else if($user['present']==3){$cc = 'absent';}
+
+          $users_ordered[$i]['merge_fields']['SS2'] = $cc;
+
+          $i++;
+      }      
+      return $users_ordered;
+    }
+    else if($contact_type=='citycircle1'){ //Volunteer with Shelter Sensitisation Attended
       $this_year = get_year();
 
       $users =  $sql->getAll("SELECT
@@ -241,7 +286,6 @@ function getUsers($sql,$contact_type='',$condition=array()) {
                               GROUP BY User.id
                               ORDER BY User.email
                                ");
-
 
       $users_ordered = array();
       $i = 0;
@@ -360,74 +404,26 @@ function getUsers($sql,$contact_type='',$condition=array()) {
       }
       return $users_ordered;
     }
-    // else if($contact_type=='user_credits'){ //Volunteer with Shelter Sensitisation Attended
-    //   $this_year = get_year();
-    //
-    //   $users =  $sql->getAll("SELECT
-    //                             User.id as id, email, mad_email, UD.value as credits
-    //                           FROM User
-    //                           INNER JOIN UserData UD on UD.user_id = User.id
-    //                           WHERE UD.name = 'user_credit_update'
-    //                           ORDER BY User.email
-    //                            ");
-    //
-    //
-    //
-    //   $users_ordered = array();
-    //   $i = 0;
-    //   foreach($users as $user) {
-    //       if($user['mad_email']) $users_ordered[$i]['email_address'] = $user['mad_email'];
-    //       else $users_ordered[$i]['email_address'] = $user['email'];
-    //       $users_ordered[$i]['merge_fields']['USERCREDIT'] = $user['credits'];
-    //       $i++;
-    //   }
-    //   return $users_ordered;
-    // }
-    else if($contact_type=='tra_participation_data'){ //Volunteer with Shelter Sensitisation Attended
+    else if($contact_type=='user_participation_data'){
       $this_year = get_year();
 
       $users =  $sql->getAll("SELECT
-                                User.id as id, email, mad_email, UD.value as participation
+                                User.id as id, email, mad_email, UD.name as data_type, UD.data as participation
                               FROM User
                               INNER JOIN UserData UD on UD.user_id = User.id
-                              WHERE UD.name = 'tra_participation_data'
+                              WHERE UD.name LIKE '%participation_2018'
                               ORDER BY User.email
                                ");
-
-
 
       $users_ordered = array();
       $i = 0;
       foreach($users as $user) {
           if($user['mad_email']) $users_ordered[$i]['email_address'] = $user['mad_email'];
           else $users_ordered[$i]['email_address'] = $user['email'];
-          $users_ordered[$i]['merge_fields']['TRASESSION'] = $user['participation'];
-          $i++;
-      }
-      return $users_ordered;
-    }
-    else if($contact_type=='user_sheltersensitisation'){ //Volunteer with Shelter Sensitisation Attended
-      $this_year = get_year();
-
-      $users =  $sql->getAll("SELECT
-                                User.id as id, email, mad_email, SA.answer as ss
-                              FROM User
-                              INNER JOIN SS_UserAnswer UA on UA.user_id = User.id
-                              INNER JOIN SS_Answer SA on SA.id = UA.answer
-                              WHERE SA.question_id = 30
-                              ORDER BY User.email
-                               ");
-      $users_ordered = array();
-      $i = 0;
-      foreach($users as $user) {
-          if($user['mad_email']) $users_ordered[$i]['email_address'] = $user['mad_email'];
-          else $users_ordered[$i]['email_address'] = $user['email'];
-          if($user['ss']=="Attended"){
-              $users_ordered[$i]['merge_fields']['USERSS'] = $user['ss'];
-          }
-          else{
-              $users_ordered[$i]['merge_fields']['USERSS'] = "Not Attended";
-          }
+          if($user['data_type']=='fr_participation_2018')
+            $users_ordered[$i]['merge_fields']['FR_PART'] = $user['participation'];
+          if($user['data_type']=='tr_participation_2018')
+            $users_ordered[$i]['merge_fields']['TR_PART'] = $user['participation'];
           $i++;
       }
       return $users_ordered;
