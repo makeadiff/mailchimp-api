@@ -1,3 +1,3 @@
 <?php
-require '../php-curl-class/vendor/autoload.php';
+require '..library/php-curl-class/vendor/autoload.php';
  ?>
