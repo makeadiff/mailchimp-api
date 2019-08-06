@@ -84,14 +84,14 @@ function count_members_in_list($listID,$apiKey){ //Function to get the number of
   return $count;
 }
 
-function get_year() { /* Function get_year(): */
-    $this_month = intval(date('m'));
-    $months = array();
-    $start_month = 4; // April
-    $start_year = date('Y');
-    if($this_month < $start_month) $start_year = date('Y')-1;
-    return $start_year;
-}
+// function get_year() { /* Function get_year(): */
+//     $this_month = intval(date('m'));
+//     $months = array();
+//     $start_month = 4; // April
+//     $start_year = date('Y');
+//     if($this_month < $start_month) $start_year = date('Y')-1;
+//     return $start_year;
+// }
 
 function curl_get_data($apiKey,$url){
   $ch = new Curl();
