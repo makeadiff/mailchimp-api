@@ -8,7 +8,7 @@
   $dataCenter = substr($mailchimp_api_key,strpos($mailchimp_api_key,'-')+1);
   $url = 'https://' . $dataCenter . '.api.mailchimp.com/3.0/batches?count=100';
 
-  include('../curl.php');
+  include('./curl.php');
 
   use \Curl\Curl;
 

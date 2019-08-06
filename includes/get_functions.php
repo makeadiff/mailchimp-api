@@ -265,7 +265,7 @@ function getUsers($sql,$contact_type='',$condition=array()) {
           $users_ordered[$i]['merge_fields']['SS2'] = $cc;
 
           $i++;
-      }      
+      }
       return $users_ordered;
     }
     else if($contact_type=='citycircle1'){ //Volunteer with Shelter Sensitisation Attended
@@ -617,9 +617,9 @@ function getUsers($sql,$contact_type='',$condition=array()) {
       $users =  $sql->getAll("SELECT
                                 U.id as id,U.name as name, U.email as email, U.mad_email as mad_email
                               FROM User U
-                              WHERE U.user_type <> 'volunteer'
-                              AND U.user_type <> 'applicant'
+                              WHERE U.user_type = 'alumni'
                               AND U.status = 1
+                              AND U.left_on >= '".$this_year."-03-01'
                                ");
       $users_ordered = array();
       $i = 0;
