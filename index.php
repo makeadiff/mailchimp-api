@@ -14,7 +14,7 @@
   }
 
 
-  require('../common.php');
+  require('common.php');
   include('curl.php');
   require("./credentials.php");
   include('includes/api_functions.php');
