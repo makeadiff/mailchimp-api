@@ -423,7 +423,8 @@ function getUsers($sql,$contact_type='',$condition=array()) {
       $users_ordered = array();
       $i = 0;
       foreach($users as $user) {
-          $users_ordered[$i]['email_address'] = $user['email'];
+          if($user['mad_email']) $users_ordered[$i]['email_address'] = $user['mad_email'];
+          else $users_ordered[$i]['email_address'] = $user['email'];
           $i++;
       }
       return $users_ordered;
