@@ -26,29 +26,124 @@ function getUsers($sql,$contact_type='',$condition=array()) {
           $i++;
       }
       return $donors_ordered;
-    }
-    else if($contact_type=='online_donor'){ //Online Donations
+    }    
+    else if($contact_type=='volunteer'){
+      $this_year = get_year();
 
-      $donors = $sql->getAll("SELECT
-                              name,email,donated_on
-                             FROM mad_donation
-                             WHERE status='success'
-                            ");
+      $where = '';      
+      
+ 
+      $users =  $sql->getAll("SELECT
+                                User.id as id,
+                                User.name as name, 
+                                User.email as email, 
+                                User.mad_email as mad_email,
+                                C.name as City, 
+                                GROUP_CONCAT(G.name) as roles, 
+                                GROUP_CONCAT(DISTINCT G.type) as type,
+                                CFR.amount as amount,
+                                CC1.present as cc1,
+                                CC2.present as cc2,
+                                CPP.cpp as cpp
+                              FROM User
+                              INNER JOIN City C on C.id=User.city_id
+                              INNER JOIN UserGroup UG on UG.user_id = User.id
+                              INNER JOIN `Group` G on G.id = UG.group_id
+                              LEFT JOIN (
+                                SELECT fundraiser_user_id, Sum(D.amount) as amount
+                                FROM Donut_Donation D 
+                                WHERE D.added_on >= '".$this_year."-06-01'
+                                GROUP BY D.fundraiser_user_id
+                              )CFR on CFR.fundraiser_user_id = User.id  
+                              LEFT JOIN (
+                                SELECT
+                                UE.user_id as user_id, MIN(UE.present) as present
+                                FROM UserEvent UE
+                                INNER JOIN Event E on E.id = UE.event_id
+                                INNER JOIN Event_Type ET on ET.id = E.event_type_id
+                                WHERE ET.id = '8'
+                                  AND UE.present > '0'
+                                  AND E.status = '1'
+                                  AND E.starts_on > '".$this_year."-06-01'
+                                GROUP BY UE.user_id
+                              )CC1 ON CC1.user_id = User.id 
+                              LEFT JOIN (
+                                SELECT
+                                UE.user_id as user_id, MIN(UE.present) as present
+                                FROM UserEvent UE
+                                INNER JOIN Event E on E.id = UE.event_id
+                                INNER JOIN Event_Type ET on ET.id = E.event_type_id
+                                WHERE ET.id = '9'
+                                  AND UE.present > '0'
+                                  AND E.status = '1'
+                                  AND E.starts_on > '".$this_year."-06-01'
+                                GROUP BY UE.user_id
+                              )CC2 ON CC2.user_id = User.id  
+                              LEFT JOIN (
+                                SELECT UD.value as cpp, UD.user_id as user_id
+                                FROM UserData UD 
+                                WHERE UD.name = 'child_protection_policy_signed'
+                              )CPP ON CPP.user_id = User.id                       
+                              WHERE 
+                                user_type = 'volunteer' 
+                                AND User.status = 1 
+                                AND UG.year = ".$this_year."
+                                AND C.id <=26
+                              GROUP BY User.id
+                              ORDER BY User.name
+                               ");
+      
+      echo count($users);
 
-      $donors_ordered = array();
+      $users_ordered = array();
       $i = 0;
-      foreach($donors as $donor) {
-          $donors_ordered[$i] = array(
-            'email_address' => $donor['email'],
-            'status' => 'subscribed',
-            'merge_fields' => array(
-              'FNAME' => $donor['name'],
-              'DONATEDON' => date('m/d/Y',strtotime($donor['donated_on']))
-            )
-          );
+      foreach($users as $user) {
+          $cc2 = '';  
+          if($user['cc2']==1)
+            $cc2 = 'present';
+          else if($user['cc2']==3)
+            $cc2 = 'absent'; 
+          else        
+            $cc2 = ''; 
+            
+          $cc1 = '';  
+          if($user['cc1']==1)
+            $cc1 = 'present';
+          else if($user['cc1']==3)
+            $cc1 = 'absent'; 
+          else        
+            $cc1 = ''; 
+
+          $q = "SELECT V.name
+                FROM UserGroup UG
+                INNER JOIN `Group` G ON G.id = UG.group_id
+                INNER JOIN Vertical V ON V.id = G.vertical_id
+                WHERE G.name <> 'Strat'
+                AND G.group_type = 'normal'
+                AND UG.user_id = ".$user['id']."
+                ORDER BY FIELD(G.type,'executive','national','strat','fellow','volunteer') ASC";
+          
+          if($user['mad_email']) $users_ordered[$i]['email_address'] = $user['mad_email'];
+          else $users_ordered[$i]['email_address'] = $user['email'];
+          $users_ordered[$i]['status'] = 'subscribed';
+          $users_ordered[$i]['merge_fields']['MADAPPID'] = $user['id'];
+          $users_ordered[$i]['merge_fields']['FNAME'] = $user['name'];
+          $users_ordered[$i]['merge_fields']['CITY'] = $user['City'];
+          $users_ordered[$i]['merge_fields']['UGROUP'] = $user['roles'];
+          $users_ordered[$i]['merge_fields']['TYPE'] = $user['type'];
+          $users_ordered[$i]['merge_fields']['CFRAMOUNT'] = $user['amount'];                
+          $users_ordered[$i]['merge_fields']['CC1'] = $cc1;
+          $users_ordered[$i]['merge_fields']['CC2'] = $cc2;    
+          $users_ordered[$i]['merge_fields']['PRI_VERT'] = $sql->getOne($q);      
+          if($user['cpp']){
+            $users_ordered[$i]['merge_fields']['CPP'] = "Yes";
+          }
+          else{
+            $users_ordered[$i]['merge_fields']['CPP'] = "No";
+          }
           $i++;
       }
-      return $donors_ordered;
+      return $users_ordered;
     }
     else if($contact_type=='failed_online_donor'){
 
@@ -94,104 +189,7 @@ function getUsers($sql,$contact_type='',$condition=array()) {
         $i++;
       }
       return $users_ordered;
-    }
-    else if($contact_type=='credits'){ //Volunteers with Credits
-      $this_year = get_year();
-
-      if(!empty($condition)){
-        $where = "AND User.id IN (".implode($condition).")";
-      }
-      else{
-        $where = "";
-      }
-
-      $users =  $sql->getAll("SELECT
-                                User.id as id, email, mad_email, User.credit as credits
-                              FROM User
-                              INNER JOIN City C on C.id=User.city_id
-                              INNER JOIN UserGroup UG on UG.user_id = User.id
-                              INNER JOIN `Group` G on G.id = UG.group_id
-                              WHERE user_type = 'volunteer' AND User.status = 1 AND UG.year = ".$this_year." ".$where."
-                              GROUP BY User.id
-                              ORDER BY User.name
-                               ");
-
-      $users_ordered = array();
-      $i = 0;
-      foreach($users as $user) {
-          if($user['mad_email']) $users_ordered[$i]['email_address'] = $user['mad_email'];
-          else $users_ordered[$i]['email_address'] = $user['email'];
-          $users_ordered[$i]['merge_fields']['CREDITS'] = $user['credits'];
-          $i++;
-      }
-      return $users_ordered;
-    }
-    else if($contact_type=='cfrparticipation'){ //Volunteer with CFR Participation
-      $this_year = get_year();
-
-      if(!empty($condition)){
-        $where = "AND User.id IN (".implode($condition).")";
-      }
-      else{
-        $where = "";
-      }
-
-      $users =  $sql->getAll("SELECT
-                                User.id as id, email, mad_email, sum(D.amount) as amount
-                              FROM User
-                              INNER JOIN Donut_Donation D on D.fundraiser_user_id = User.id
-                              INNER JOIN UserGroup UG on UG.user_id = User.id
-                              WHERE user_type = 'volunteer'
-                                AND User.status = 1
-                                AND UG.year = ".$this_year." ".$where."
-                                AND D.added_on >= '".$this_year."-06-01'
-                              GROUP BY User.id
-                              ORDER BY User.name
-                               ");
-
-      $users_ordered = array();
-      $i = 0;
-      foreach($users as $user) {
-          if($user['mad_email']) $users_ordered[$i]['email_address'] = $user['mad_email'];
-          else $users_ordered[$i]['email_address'] = $user['email'];
-          if($user['amount']>0){
-            $users_ordered[$i]['merge_fields']['CFR'] = "Yes";
-          }
-          $i++;
-      }
-      return $users_ordered;
-    }
-    else if($contact_type=='cframount'){ //Volunteer with CFR Participation
-      $this_year = get_year();
-
-      if(!empty($condition)){
-        $where = "AND User.id IN (".implode($condition).")";
-      }
-      else{
-        $where = "";
-      }
-
-      $users =  $sql->getAll("SELECT
-                                User.id as id, email, mad_email, SUM(D.amount) as amount
-                              FROM User
-                              INNER JOIN Donut_Donation D on D.fundraiser_user_id = User.id
-                              WHERE user_type = 'volunteer'
-                                AND User.status = 1
-                                AND D.added_on >= '".$this_year."-06-01'
-                              GROUP BY User.id
-                              ORDER BY User.name
-                               ");
-
-      $users_ordered = array();
-      $i = 0;
-      foreach($users as $user) {
-          if($user['mad_email']) $users_ordered[$i]['email_address'] = $user['mad_email'];
-          else $users_ordered[$i]['email_address'] = $user['email'];
-          $users_ordered[$i]['merge_fields']['CFRAMOUNT'] = $user['amount'];
-          $i++;
-      }
-      return $users_ordered;
-    }
+    }        
     else if($contact_type=='sheltersensitisation1'){ //Volunteer with Shelter Sensitisation Attended
       $this_year = get_year();
 
@@ -267,76 +265,7 @@ function getUsers($sql,$contact_type='',$condition=array()) {
           $i++;
       }
       return $users_ordered;
-    }
-    else if($contact_type=='citycircle1'){ //Volunteer with Shelter Sensitisation Attended
-      $this_year = get_year();
-
-      $users =  $sql->getAll("SELECT
-                                User.id as id, email, mad_email, MIN(UE.present) as present
-                              FROM User
-                              INNER JOIN UserEvent UE on UE.user_id = User.id
-                              INNER JOIN Event E on E.id = UE.event_id
-                              INNER JOIN Event_Type ET on ET.id = E.event_type_id
-                              WHERE User.user_type = 'volunteer'
-                                AND User.status = 1
-                                AND ET.id = '8'
-                                AND UE.present > '0'
-                                AND E.status = '1'
-                                AND E.starts_on > '".$this_year."-09-01'
-                              GROUP BY User.id
-                              ORDER BY User.email
-                               ");
-
-      $users_ordered = array();
-      $i = 0;
-      foreach($users as $user) {
-          $cc = '';
-          if($user['mad_email']) $users_ordered[$i]['email_address'] = $user['mad_email'];
-          else $users_ordered[$i]['email_address'] = $user['email'];
-          if($user['present']==1){$cc = 'present';}
-          else if($user['present']==3){$cc = 'absent';}
-
-          $users_ordered[$i]['merge_fields']['CC1'] = $cc;
-
-          $i++;
-      }
-      return $users_ordered;
-    }
-    else if($contact_type=='citycircle2'){ //Volunteer with Shelter Sensitisation Attended
-      $this_year = get_year();
-
-      $users =  $sql->getAll("SELECT
-                                User.id as id, email, mad_email, MIN(UE.present) as present
-                              FROM User
-                              INNER JOIN UserEvent UE on UE.user_id = User.id
-                              INNER JOIN Event E on E.id = UE.event_id
-                              INNER JOIN Event_Type ET on ET.id = E.event_type_id
-                              WHERE User.user_type = 'volunteer'
-                                AND User.status = 1
-                                AND ET.id = '9'
-                                AND UE.present > '0'
-                                AND E.status = '1'
-                                AND E.starts_on > '".$this_year."-09-01'
-                              GROUP BY User.id
-                              ORDER BY User.email
-                               ");
-
-
-      $users_ordered = array();
-      $i = 0;
-      foreach($users as $user) {
-          $cc = '';
-          if($user['mad_email']) $users_ordered[$i]['email_address'] = $user['mad_email'];
-          else $users_ordered[$i]['email_address'] = $user['email'];
-          if($user['present']==1){$cc = 'present';}
-          else if($user['present']==3){$cc = 'absent';}
-
-          $users_ordered[$i]['merge_fields']['CC2'] = $cc;
-
-          $i++;
-      }
-      return $users_ordered;
-    }
+    }     
     else if($contact_type=='vertical_training'){ //Volunteer with Shelter Sensitisation Attended
       $this_year = get_year();
 
@@ -375,59 +304,7 @@ function getUsers($sql,$contact_type='',$condition=array()) {
           $i++;
       }
       return $users_ordered;
-    }
-    else if($contact_type=='childprotection'){ //Volunteer with Shelter Sensitisation Attended
-      $this_year = get_year();
-
-      $users =  $sql->getAll("SELECT
-                                User.id as id, email, mad_email, UD.value as cpp
-                              FROM User
-                              INNER JOIN UserData UD on UD.user_id = User.id
-                              WHERE UD.name = 'child_protection_policy_signed'
-                              ORDER BY User.email
-                               ");
-
-
-
-      $users_ordered = array();
-      $i = 0;
-      foreach($users as $user) {
-          if($user['mad_email']) $users_ordered[$i]['email_address'] = $user['mad_email'];
-          else $users_ordered[$i]['email_address'] = $user['email'];
-          if($user['cpp']){
-            $users_ordered[$i]['merge_fields']['CPP'] = "Yes";
-          }
-          else{
-            $users_ordered[$i]['merge_fields']['CPP'] = "No";
-          }
-          $i++;
-      }
-      return $users_ordered;
-    }
-    else if($contact_type=='user_participation_data'){
-      $this_year = get_year();
-
-      $users =  $sql->getAll("SELECT
-                                User.id as id, email, mad_email, UD.name as data_type, UD.data as participation
-                              FROM User
-                              INNER JOIN UserData UD on UD.user_id = User.id
-                              WHERE UD.name LIKE '%participation_2018'
-                              ORDER BY User.email
-                               ");
-
-      $users_ordered = array();
-      $i = 0;
-      foreach($users as $user) {
-          if($user['mad_email']) $users_ordered[$i]['email_address'] = $user['mad_email'];
-          else $users_ordered[$i]['email_address'] = $user['email'];
-          if($user['data_type']=='fr_participation_2018')
-            $users_ordered[$i]['merge_fields']['FR_PART'] = $user['participation'];
-          if($user['data_type']=='tr_participation_2018')
-            $users_ordered[$i]['merge_fields']['TR_PART'] = $user['participation'];
-          $i++;
-      }
-      return $users_ordered;
-    }
+    }       
     else if($contact_type=='fellowship_applicants'){
       $users =  $sql->getAll("SELECT
                                 User.id as id, email, mad_email,G.name as first_pref
@@ -448,36 +325,7 @@ function getUsers($sql,$contact_type='',$condition=array()) {
           $i++;
       }
       return $users_ordered;
-    }
-    else if($contact_type=='user_city_circle'){
-      $this_year = get_year();
-
-      $users =  $sql->getAll("SELECT
-                                User.id as id, email, mad_email, SA.answer as cc
-                              FROM User
-                              INNER JOIN SS_UserAnswer UA on UA.user_id = User.id
-                              INNER JOIN SS_Answer SA on SA.id = UA.answer
-                              WHERE SA.question_id = 28
-                              ORDER BY User.email
-                               ");
-      $users_ordered = array();
-      $i = 0;
-      foreach($users as $user) {
-          if($user['mad_email']) $users_ordered[$i]['email_address'] = $user['mad_email'];
-          else $users_ordered[$i]['email_address'] = $user['email'];
-          if($user['cc']=="Attended Both"){
-              $users_ordered[$i]['merge_fields']['USERCC'] = 2;
-          }
-          else if($user['cc']=="Attended One"){
-              $users_ordered[$i]['merge_fields']['USERCC'] = 1;
-          }
-          else{
-              $users_ordered[$i]['merge_fields']['USERCC'] = 0;
-          }
-          $i++;
-      }
-      return $users_ordered;
-    }
+    }    
     else if($contact_type=='fellows_strats'){
       $this_year = get_year();
 
@@ -507,52 +355,7 @@ function getUsers($sql,$contact_type='',$condition=array()) {
           $i++;
       }
       return $users_ordered;
-    }
-    else if($contact_type=='vol_years'){
-      $this_year = get_year();
-
-      $users =  $sql->getAll("SELECT
-                                U.id as id,U.name as name, U.email as email, U.mad_email as mad_email, GROUP_CONCAT(DISTINCT UG.year) as vol_years
-                              FROM User U
-                              INNER JOIN UserGroup UG ON UG.user_id = U.id
-                              WHERE U.user_type = 'volunteer'
-                              AND U.status = 1
-                              GROUP BY U.id
-                               ");
-      // dump($users);
-      // exit;
-      $users_ordered = array();
-      $i = 0;
-      foreach($users as $user) {
-          if($user['mad_email']) $users_ordered[$i]['email_address'] = $user['mad_email'];
-          else $users_ordered[$i]['email_address'] = $user['email'];
-          $users_ordered[$i]['merge_fields']['VOLYEAR'] = $user['vol_years'];
-          $i++;
-      }
-      return $users_ordered;
-    }
-    else if($contact_type=='madapp_id'){
-      $this_year = get_year();
-
-      $users =  $sql->getAll("SELECT
-                                U.id as id,U.name as name, U.email as email, U.mad_email as mad_email
-                              FROM User U
-                              WHERE U.user_type = 'volunteer'
-                              AND U.status = 1
-                              GROUP BY U.id
-                               ");
-      // dump($users);
-      // exit;
-      $users_ordered = array();
-      $i = 0;
-      foreach($users as $user) {
-          if($user['mad_email']) $users_ordered[$i]['email_address'] = $user['mad_email'];
-          else $users_ordered[$i]['email_address'] = $user['email'];
-          $users_ordered[$i]['merge_fields']['MADAPPID'] = $user['id'];
-          $i++;
-      }
-      return $users_ordered;
-    }
+    }        
     else if($contact_type=='volunteer_type'){
       $this_year = get_year();
 
@@ -563,9 +366,7 @@ function getUsers($sql,$contact_type='',$condition=array()) {
                               WHERE U.user_type = 'volunteer'
                               AND U.status = 1
                               GROUP BY U.id
-                               ");
-      // dump($users);
-      // exit;
+                               ");      
       $users_ordered = array();
       $i = 0;
       // dump(date('Y-m-d H:i:s',strtotime($this_year.'-04-01')));
@@ -612,14 +413,12 @@ function getUsers($sql,$contact_type='',$condition=array()) {
       return $users_ordered;
     }
     else if($contact_type=='delete_old'){
-      $this_year = get_year();
-      // Update the PRIMARY Vertical of a Volunteer
+      $this_year = get_year();      
       $users =  $sql->getAll("SELECT
                                 U.id as id,U.name as name, U.email as email, U.mad_email as mad_email
                               FROM User U
                               WHERE (U.user_type = 'alumni' OR U.user_type = 'let_go')
-                              AND U.status = 1
-                              AND U.left_on >= '".$this_year."-03-01'
+                              AND U.status = 1                              
                                ");
       $users_ordered = array();
       $i = 0;
@@ -628,44 +427,7 @@ function getUsers($sql,$contact_type='',$condition=array()) {
           $i++;
       }
       return $users_ordered;
-    }
-    else{
-
-      $this_year = get_year();
-
-      if(!empty($condition)){
-        $where = "AND User.id IN (".implode(',',$condition).")";
-      }
-      else{
-        $where = "";
-      }
-
-      $users =  $sql->getAll("SELECT
-                                User.id as id,User.name as name, email, mad_email,C.name as City, GROUP_CONCAT(G.name) as roles, GROUP_CONCAT(DISTINCT G.type) as type
-                              FROM User
-                              INNER JOIN City C on C.id=User.city_id
-                              INNER JOIN UserGroup UG on UG.user_id = User.id
-                              INNER JOIN `Group` G on G.id = UG.group_id
-                              WHERE user_type = 'volunteer' AND User.status = 1 AND UG.year = ".$this_year." ".$where."
-                              AND C.id <=26
-                              GROUP BY User.id
-                              ORDER BY User.name
-                               ");
-
-      $users_ordered = array();
-      $i = 0;
-      foreach($users as $user) {
-          if($user['mad_email']) $users_ordered[$i]['email_address'] = $user['mad_email'];
-          else $users_ordered[$i]['email_address'] = $user['email'];
-          $users_ordered[$i]['status'] = 'subscribed';
-          $users_ordered[$i]['merge_fields']['FNAME'] = $user['name'];
-          $users_ordered[$i]['merge_fields']['CITY'] = $user['City'];
-          $users_ordered[$i]['merge_fields']['UGROUP'] = $user['roles'];
-          $users_ordered[$i]['merge_fields']['TYPE'] = $user['type'];
-          $i++;
-      }
-      return $users_ordered;
-    }
+    }    
 }
 
 function clearList($sql,$listID,$apiKey){
