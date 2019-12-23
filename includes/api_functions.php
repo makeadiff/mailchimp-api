@@ -16,7 +16,7 @@ function populateList($listID,$users,$apiKey,$sql){
   $i=0;
   foreach ($users as $user) {
     $user = utf8ize($user); // dump(json_encode($user));  // echo json_last_error();
-    $batchoperations['operations'][$i]['method']='PATCH';
+    $batchoperations['operations'][$i]['method']='POST';
     $batchoperations['operations'][$i]['path']='lists/' . $listID . '/members';
     $batchoperations['operations'][$i]['body']=json_encode($user);
     $i++;
