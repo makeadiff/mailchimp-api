@@ -417,8 +417,7 @@ function getUsers($sql,$contact_type='',$condition=array()) {
       $users =  $sql->getAll("SELECT
                                 U.id as id,U.name as name, U.email as email, U.mad_email as mad_email
                               FROM User U
-                              WHERE (U.user_type = 'alumni' OR U.user_type = 'let_go')
-                              AND U.status = 1                              
+                              WHERE (U.user_type = 'alumni' OR U.user_type = 'let_go')                                                          
                                ");
       $users_ordered = array();
       $i = 0;
