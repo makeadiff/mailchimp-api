@@ -92,8 +92,6 @@ function getUsers($sql,$contact_type='',$condition=array()) {
                               GROUP BY User.id
                               ORDER BY User.name
                                ");
-      
-      echo count($users);
 
       $users_ordered = array();
       $i = 0;
@@ -135,6 +133,7 @@ function getUsers($sql,$contact_type='',$condition=array()) {
           $users_ordered[$i]['merge_fields']['CC1'] = $cc1;
           $users_ordered[$i]['merge_fields']['CC2'] = $cc2;    
           $users_ordered[$i]['merge_fields']['PRI_VERT'] = $sql->getOne($q);      
+          $users_ordered[$i]['merge_fields']['VT'] = '';
           if($user['cpp']){
             $users_ordered[$i]['merge_fields']['CPP'] = "Yes";
           }
