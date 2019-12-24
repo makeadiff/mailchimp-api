@@ -7,7 +7,7 @@ function getUsers($sql,$contact_type='',$condition=array()) {
       $donors = $sql->getAll("SELECT
                               DD.name as name ,DD.email as email,DD.added_on as added_on, GROUP_CONCAT(DISTINCT DON.type) as type
                              FROM Donut_Donor DD
-                             INNER JOIN Donut_Donation DON ON DON.donor_id = DD.id
+                             LEFT JOIN Donut_Donation DON ON DON.donor_id = DD.id
                              GROUP BY DD.id
                             ");
 
@@ -132,8 +132,7 @@ function getUsers($sql,$contact_type='',$condition=array()) {
           $users_ordered[$i]['merge_fields']['CFRAMOUNT'] = $user['amount'];                
           $users_ordered[$i]['merge_fields']['CC1'] = $cc1;
           $users_ordered[$i]['merge_fields']['CC2'] = $cc2;    
-          $users_ordered[$i]['merge_fields']['PRI_VERT'] = $sql->getOne($q);      
-          $users_ordered[$i]['merge_fields']['VT'] = '';
+          $users_ordered[$i]['merge_fields']['PRI_VERT'] = $sql->getOne($q);                
           if($user['cpp']){
             $users_ordered[$i]['merge_fields']['CPP'] = "Yes";
           }

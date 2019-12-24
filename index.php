@@ -49,14 +49,13 @@
     case 'volunteer':
       $new = array();
       $users = getUsers($sql,$contact_type,$new);      
-      populateList($volunteer,$users,$apiKey,$sql,$contact_type);
-      patch($volunteer,$users,$apiKey,$sql);
-      break;    
-    case 'donor':
-      $donorsql = new Sql($config_data['db_host'], $config_data['db_user'], $config_data['db_password'], 'makeadiff_madapp');
-      $users = getUsers($donorsql,$contact_type);
       dump($users);
-      // populateList($donor,$users,$apiKey,$sql);
+      // populateList($volunteer,$users,$apiKey,$sql,$contact_type);
+      // patch($volunteer,$users,$apiKey,$sql);
+      break;    
+    case 'donor':      
+      $users = getUsers($sql,$contact_type);      
+      populateList($donor,$users,$apiKey,$sql);
       break;
     case 'online_donor':
       $donorsql = new Sql($config_data['db_host'], $config_data['db_user'], $config_data['db_password'], 'makeadiff_mad');
