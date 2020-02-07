@@ -48,10 +48,9 @@
   switch ($contact_type) {
     case 'volunteer':
       $new = array();
-      $users = getUsers($sql,$contact_type,$new);      
-      dump($users);
-      // populateList($volunteer,$users,$apiKey,$sql,$contact_type);
-      // patch($volunteer,$users,$apiKey,$sql);
+      $users = getUsers($sql,$contact_type,$new);            
+      populateList($volunteer,$users,$apiKey,$sql,$contact_type);
+      patch($volunteer,$users,$apiKey,$sql);
       break;    
     case 'donor':      
       $users = getUsers($sql,$contact_type);      
