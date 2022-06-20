@@ -1,0 +1,61 @@
+- Volunteers 2022
+- Donors List Receipt Update Mail 2021-22
+- Bangalore Volunteers
+- Delhi BSC
+- Delhi BBA
+- Cochin Volunteers
+- Coimbatore Volunteers
+- Guntur Volunteers
+- Dehradun Volunteers
+- Gwalior Volunteers
+- Hyderabad Volunteers
+- Mumbai Volunteers
+- Mangalore volunteers
+- Lucknow volunteers
+- Mysore Volunteers
+- Nagpur Volunteers
+- Trivandram Volunteers
+- Pune Volunteers
+- Vellore Volunteers
+- Vijayawada Volunteers
+- Vizag Volunteers
+- Chennai Volunteers
+- Chandigarh Volunteers
+- Bhopal Volunteers
+- Ahmedabad Volunteers
+- New Recruited Volunteers Part 2 : Sourcing Email
+- New Recruited Volunteers : Sourcing Email
+- Alumni list for Evaluator sign up
+- Applicant_Sep-Dec2020
+- All Volunteers 2021
+- CH missed attendance
+- Applicant_Jan-May2021
+- Strategists 2021
+- Fellowship Cohort 2021
+- Mentor Applications 2021-22
+- Corporate Contacts
+- External_MADWeek_08_11_2020
+- External_MADWeek_01_11_2020
+- hubspot-alumni
+- hubspot-test
+- NACH Donor List (For Status Mails)
+- Alumni
+- Donors
+
+
+---
+
+Delete these...
+
+- New Recruited Volunteers Part 2 : Sourcing Email
+- New Recruited Volunteers : Sourcing Email
+- Alumni list for Evaluator sign up
+- Applicant_Sep-Dec2020
+- CH missed attendance
+- Applicant_Jan-May2021
+- Mentor Applications 2021-22
+- External_MADWeek_08_11_2020
+- External_MADWeek_01_11_2020
+- hubspot-alumni
+- hubspot-test
+

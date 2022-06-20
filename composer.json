@@ -1,5 +1,6 @@
 {
     "require": {
-        "drewm/mailchimp-api": "^2.5"
+        "drewm/mailchimp-api": "^2.5",
+        "php-curl-class/php-curl-class": "^8.8"
     }
 }

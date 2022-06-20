@@ -39,8 +39,8 @@ $users = keyFormat($model->getUsers(['city_id' => 20]));
 
 use \DrewM\MailChimp\MailChimp;
 use \DrewM\MailChimp\Batch;
-$mp = new MailChimp($mailchimp_api_key);
-$batch = $mp->new_batch();
+$mc = new MailChimp($mailchimp_api_key);
+$batch = $mc->new_batch();
 
 $found = 0;
 foreach($users as $user_id => $user) {
@@ -48,7 +48,7 @@ foreach($users as $user_id => $user) {
 		// echo $user_id . "\n";
 		$found++;
 
-		$subscriber_hash = $mp->subscriberHash($user['email']);
+		$subscriber_hash = $mc->subscriberHash($user['email']);
 
 	    $batch->patch("op_" . $user_id, "lists/$volunteer/members/$subscriber_hash", [
 	        'merge_fields' => ['CPP' => 'Yes']

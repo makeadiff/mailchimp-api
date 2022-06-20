@@ -29,97 +29,29 @@ function getUsers($sql,$contact_type='',$condition=array()) {
     }    
     else if($contact_type=='volunteer'){
       $this_year = get_year();
-
-      $where = '';      
-      
- 
-      $users =  $sql->getAll("SELECT
-                                User.id as id,
-                                User.name as name, 
-                                User.email as email, 
-                                User.mad_email as mad_email,
-                                C.name as City, 
-                                GROUP_CONCAT(G.name) as roles, 
-                                GROUP_CONCAT(DISTINCT G.type) as type,
-                                CFR.amount as amount,
-                                CC1.present as cc1,
-                                CC2.present as cc2,
-                                CPP.cpp as cpp
+      // Current vols
+      $users = $sql->getAll("SELECT User.id, User.name as name, User.email as email, User.mad_email as mad_email, 
+                              C.name as City, GROUP_CONCAT(G.name) as roles, GROUP_CONCAT(DISTINCT G.type) as type
                               FROM User
                               INNER JOIN City C on C.id=User.city_id
                               INNER JOIN UserGroup UG on UG.user_id = User.id
                               INNER JOIN `Group` G on G.id = UG.group_id
-                              LEFT JOIN (
-                                SELECT fundraiser_user_id, Sum(D.amount) as amount
-                                FROM Donut_Donation D 
-                                WHERE D.added_on >= '".$this_year."-06-01'
-                                GROUP BY D.fundraiser_user_id
-                              )CFR on CFR.fundraiser_user_id = User.id  
-                              LEFT JOIN (
-                                SELECT
-                                UE.user_id as user_id, MIN(UE.present) as present
-                                FROM UserEvent UE
-                                INNER JOIN Event E on E.id = UE.event_id
-                                INNER JOIN Event_Type ET on ET.id = E.event_type_id
-                                WHERE ET.id = '8'
-                                  AND UE.present > '0'
-                                  AND E.status = '1'
-                                  AND E.starts_on > '".$this_year."-06-01'
-                                GROUP BY UE.user_id
-                              )CC1 ON CC1.user_id = User.id 
-                              LEFT JOIN (
-                                SELECT
-                                UE.user_id as user_id, MIN(UE.present) as present
-                                FROM UserEvent UE
-                                INNER JOIN Event E on E.id = UE.event_id
-                                INNER JOIN Event_Type ET on ET.id = E.event_type_id
-                                WHERE ET.id = '9'
-                                  AND UE.present > '0'
-                                  AND E.status = '1'
-                                  AND E.starts_on > '".$this_year."-06-01'
-                                GROUP BY UE.user_id
-                              )CC2 ON CC2.user_id = User.id  
-                              LEFT JOIN (
-                                SELECT UD.value as cpp, UD.user_id as user_id
-                                FROM UserData UD 
-                                WHERE UD.name = 'child_protection_policy_signed'
-                              )CPP ON CPP.user_id = User.id                       
-                              WHERE 
-                                user_type = 'volunteer' 
-                                AND User.status = 1 
-                                AND UG.year = ".$this_year."
-                                AND C.id <=26
-                              GROUP BY User.id
-                              ORDER BY User.name
-                               ");
+                              WHERE User.user_type = 'volunteer' 
+                                 AND User.status = '1' 
+                                 AND UG.year = ".$this_year."
+                                 AND C.id != 28
+                                 GROUP BY UG.user_id");
 
       $users_ordered = array();
       $i = 0;
       foreach($users as $user) {
-          $cc2 = '';  
-          if($user['cc2']==1)
-            $cc2 = 'present';
-          else if($user['cc2']==3)
-            $cc2 = 'absent'; 
-          else        
-            $cc2 = ''; 
-            
-          $cc1 = '';  
-          if($user['cc1']==1)
-            $cc1 = 'present';
-          else if($user['cc1']==3)
-            $cc1 = 'absent'; 
-          else        
-            $cc1 = ''; 
-
-          $q = "SELECT V.name
+          $main_vertical = "SELECT V.name
                 FROM UserGroup UG
                 INNER JOIN `Group` G ON G.id = UG.group_id
                 INNER JOIN Vertical V ON V.id = G.vertical_id
-                WHERE G.name <> 'Strat'
+                WHERE G.name <> 'Strat' AND UG.main='1'
                 AND G.group_type = 'normal'
-                AND UG.user_id = ".$user['id']."
-                ORDER BY FIELD(G.type,'executive','national','strat','fellow','volunteer') ASC";
+                AND UG.user_id = ".$user['id'];
           
           if($user['mad_email']) $users_ordered[$i]['email_address'] = $user['mad_email'];
           else $users_ordered[$i]['email_address'] = $user['email'];
@@ -129,20 +61,126 @@ function getUsers($sql,$contact_type='',$condition=array()) {
           $users_ordered[$i]['merge_fields']['CITY'] = $user['City'];
           $users_ordered[$i]['merge_fields']['UGROUP'] = $user['roles'];
           $users_ordered[$i]['merge_fields']['TYPE'] = $user['type'];
-          $users_ordered[$i]['merge_fields']['CFRAMOUNT'] = $user['amount'];                
-          $users_ordered[$i]['merge_fields']['CC1'] = $cc1;
-          $users_ordered[$i]['merge_fields']['CC2'] = $cc2;    
-          $users_ordered[$i]['merge_fields']['PRI_VERT'] = $sql->getOne($q);                
-          if($user['cpp']){
-            $users_ordered[$i]['merge_fields']['CPP'] = "Yes";
-          }
-          else{
-            $users_ordered[$i]['merge_fields']['CPP'] = "No";
-          }
+          $users_ordered[$i]['merge_fields']['PRI_VERT'] = $sql->getOne($main_vertical);                
           $i++;
       }
       return $users_ordered;
     }
+
+
+    // I think this has some 2019 specific code - this was done by Rohit, so I(Binny) am not very sure.
+    //   $this_year = get_year();
+    //   $where = '';      
+    //   $users =  $sql->getAll("SELECT
+    //                             User.id as id,
+    //                             User.name as name, 
+    //                             User.email as email, 
+    //                             User.mad_email as mad_email,
+    //                             C.name as City, 
+    //                             GROUP_CONCAT(G.name) as roles, 
+    //                             GROUP_CONCAT(DISTINCT G.type) as type,
+    //                             CFR.amount as amount,
+    //                             CC1.present as cc1,
+    //                             CC2.present as cc2,
+    //                             CPP.cpp as cpp
+    //                           FROM User
+    //                           INNER JOIN City C on C.id=User.city_id
+    //                           INNER JOIN UserGroup UG on UG.user_id = User.id
+    //                           INNER JOIN `Group` G on G.id = UG.group_id
+    //                           LEFT JOIN (
+    //                             SELECT fundraiser_user_id, Sum(D.amount) as amount
+    //                             FROM Donut_Donation D 
+    //                             WHERE D.added_on >= '".$this_year."-06-01'
+    //                             GROUP BY D.fundraiser_user_id
+    //                           )CFR on CFR.fundraiser_user_id = User.id  
+    //                           LEFT JOIN (
+    //                             SELECT
+    //                             UE.user_id as user_id, MIN(UE.present) as present
+    //                             FROM UserEvent UE
+    //                             INNER JOIN Event E on E.id = UE.event_id
+    //                             INNER JOIN Event_Type ET on ET.id = E.event_type_id
+    //                             WHERE ET.id = '8'
+    //                               AND UE.present > '0'
+    //                               AND E.status = '1'
+    //                               AND E.starts_on > '".$this_year."-06-01'
+    //                             GROUP BY UE.user_id
+    //                           )CC1 ON CC1.user_id = User.id 
+    //                           LEFT JOIN (
+    //                             SELECT
+    //                             UE.user_id as user_id, MIN(UE.present) as present
+    //                             FROM UserEvent UE
+    //                             INNER JOIN Event E on E.id = UE.event_id
+    //                             INNER JOIN Event_Type ET on ET.id = E.event_type_id
+    //                             WHERE ET.id = '9'
+    //                               AND UE.present > '0'
+    //                               AND E.status = '1'
+    //                               AND E.starts_on > '".$this_year."-06-01'
+    //                             GROUP BY UE.user_id
+    //                           )CC2 ON CC2.user_id = User.id  
+    //                           LEFT JOIN (
+    //                             SELECT UD.value as cpp, UD.user_id as user_id
+    //                             FROM UserData UD 
+    //                             WHERE UD.name = 'child_protection_policy_signed'
+    //                           )CPP ON CPP.user_id = User.id                       
+    //                           WHERE 
+    //                             user_type = 'volunteer' 
+    //                             AND User.status = 1 
+    //                             AND UG.year = ".$this_year."
+    //                             AND C.id <=26
+    //                           GROUP BY User.id
+    //                           ORDER BY User.name
+    //                            ");
+
+    //   $users_ordered = array();
+    //   $i = 0;
+    //   foreach($users as $user) {
+    //       $cc2 = '';  
+    //       if($user['cc2']==1)
+    //         $cc2 = 'present';
+    //       else if($user['cc2']==3)
+    //         $cc2 = 'absent'; 
+    //       else        
+    //         $cc2 = ''; 
+            
+    //       $cc1 = '';  
+    //       if($user['cc1']==1)
+    //         $cc1 = 'present';
+    //       else if($user['cc1']==3)
+    //         $cc1 = 'absent'; 
+    //       else        
+    //         $cc1 = ''; 
+
+    //       $q = "SELECT V.name
+    //             FROM UserGroup UG
+    //             INNER JOIN `Group` G ON G.id = UG.group_id
+    //             INNER JOIN Vertical V ON V.id = G.vertical_id
+    //             WHERE G.name <> 'Strat'
+    //             AND G.group_type = 'normal'
+    //             AND UG.user_id = ".$user['id']."
+    //             ORDER BY FIELD(G.type,'executive','national','strat','fellow','volunteer') ASC";
+          
+    //       if($user['mad_email']) $users_ordered[$i]['email_address'] = $user['mad_email'];
+    //       else $users_ordered[$i]['email_address'] = $user['email'];
+    //       $users_ordered[$i]['status'] = 'subscribed';
+    //       $users_ordered[$i]['merge_fields']['MADAPPID'] = $user['id'];
+    //       $users_ordered[$i]['merge_fields']['FNAME'] = $user['name'];
+    //       $users_ordered[$i]['merge_fields']['CITY'] = $user['City'];
+    //       $users_ordered[$i]['merge_fields']['UGROUP'] = $user['roles'];
+    //       $users_ordered[$i]['merge_fields']['TYPE'] = $user['type'];
+    //       $users_ordered[$i]['merge_fields']['CFRAMOUNT'] = $user['amount'];                
+    //       $users_ordered[$i]['merge_fields']['CC1'] = $cc1;
+    //       $users_ordered[$i]['merge_fields']['CC2'] = $cc2;    
+    //       $users_ordered[$i]['merge_fields']['PRI_VERT'] = $sql->getOne($q);                
+    //       if($user['cpp']){
+    //         $users_ordered[$i]['merge_fields']['CPP'] = "Yes";
+    //       }
+    //       else{
+    //         $users_ordered[$i]['merge_fields']['CPP'] = "No";
+    //       }
+    //       $i++;
+    //   }
+    //   return $users_ordered;
+    // }
     else if($contact_type=='failed_online_donor'){
 
       $donors = $sql->getAll("SELECT

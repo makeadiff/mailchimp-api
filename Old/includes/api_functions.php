@@ -23,12 +23,12 @@ function populateList($listID,$users,$apiKey,$sql){
   }
 
   $url = 'https://' . $dataCenter . '.api.mailchimp.com/3.0/batches';
+
   $batch_add = curl_post_data($apiKey,$url,$batchoperations);
   $count = count_members_in_list($listID,$apiKey);
   $list = $sql->getOne("SELECT id
                         FROM mailchimp_emaillist
-                        WHERE mailchimp_list_id = '".$listID."'
-                      ");
+                        WHERE mailchimp_list_id = '".$listID."'");
 
   if($list==''){
     $query = $sql->insert("mailchimp_emaillist",array(
